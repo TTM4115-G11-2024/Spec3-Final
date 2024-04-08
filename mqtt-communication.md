@@ -2,32 +2,40 @@
 
 ## stm Charging Communication
 
-Current battery percentage from Car to Charger:
+### Current battery percentage from Car to Charger:
+```
 {
   "command": "battery_percentage",
   "percentage": <percentage>
 }
+```
 
-Stop charging from Charger to Car:
+### Stop charging from Charger to Car:
+```
 {
   "command": "stop_charging"
 }
+```
 
 ## sd Charging for User
-"Request Activation and Make Charging unit unavailable":
+### "Request Activation and Make Charging unit unavailable":
+```
 {
   "command": "activate_charger",
   "charger_id": <id of charger>,
   "car_id": <id of car>,
   "battery_target": <target percentage of car battery>,
 }
+```
 
-"OK":
+### "OK":
 The purpose of this OK is the same as 200 OK in HTTP:
+```
 {
   "command": "response",
   "response_class": <"ERROR" or "OK">
 }
+```
 
 "Allow charging" from Server to Charger:
 {
