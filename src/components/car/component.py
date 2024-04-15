@@ -24,16 +24,6 @@ class CarBattery:
         self.wanted_perc = perc
         self.actual_perc = act_perc
 
-    def charger_plugged(self):
-        self.charger_connected = True
-        print(self.stm.driver.print_status())
-        print("Car connected")
-
-    def charger_unplugged(self):
-        self.charger_connected = False
-        print(self.stm.driver.print_status())
-        print("Car disconnected")
-
     def send_update(self, update, charger):
         self.charger.send(
             "percentage"
@@ -111,21 +101,29 @@ class MQTT_Client:
     def on_connect(self, client, userdata, flags, rc):
         print("on_connect(): {}".format(mqtt.connack_string(rc)))
 
-    def on_message(self, client, userdata, msg):
-        print("on_message(): topic: {}".format(msg.topic))
-        self.stm_driver.send("message", "tick_tock")
+    def on_message(self, msg):
+        if msg == "connected":
+            self.charger_plugged
+        else:
+            self.charger_unplugged
+
+    def send_battery_level(self, msg):
+        self.client.publish(self.battery_percentage, msg.payload)
+        self.battery_percentage += 1
+
+    def charger_plugged(self):
+        self.charger_connected = True
+        print(self.stm.driver.print_status())
+        print("Car connected")
+
+    def charger_unplugged(self):
+        self.charger_connected = False
+        print(self.stm.driver.print_status())
+        print("Car disconnected")
 
     def start(self, broker, port):
-
-        print("Connecting to {}:{}".format(broker, port))
+        self.client = mqtt.Client()
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
         self.client.connect(broker, port)
-
-        self.client.subscribe("ttm4115")
-
-        try:
-            # line below should not have the () after the function!
-            thread = Thread(target=self.client.loop_forever)
-            thread.start()
-        except KeyboardInterrupt:
-            print("Interrupted")
-            self.client.disconnect()
+        self.client.subscribe("charger_percent")
