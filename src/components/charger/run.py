@@ -3,6 +3,16 @@
 from stmpy import Machine, Driver
 from IPython.display import display
 import ipywidgets as widgets
+import time
+from sense_hat import SenseHat
+
+sense = SenseHat()
+
+r = 255
+g = 0
+b = 0
+
+msleep = lambda x: time.sleep(x / 1000.0)
 
 accped_users = {"Adrian": ["18:00", "20:00"], "Sindre": ["13:45"]}
 reservation_time_and_battery = {"18:00": [67], "20:00": [55], "13:45": [44]}
@@ -20,12 +30,18 @@ class Charger:
     # Connected nozzle, and need to authenticate user.
     def charger_nozzle_detected(self):
         print("connected")
-        # TODO 1: Sensehat: Display ORANGE screen.
+        sense.clear([255, 165, 0]) # Sets screen to ORANGE.
 
     def charger_nozzle_disconnected(self):
         print("disconnected")
-        # TODO 1: Sensehat: Blink GREEN screen for 5 seconds.
-        # TODO 2: Sensehat: Display GREEN screen
+
+        # Sensehat: Blink GREEN screen for 5 seconds.
+        for i in range(10):
+            sense.clear([82, 100, 11]) # Sets screen to LIME YELLOW.
+            time.sleep(0.5)
+            sense.clear([0, 0, 0]) # Turn OFF screen.
+
+        sense.clear([82, 100, 11]) # Set screen to LIME YELLOW.
         #self.idle
 
     def activate_charger(self, user, time):
@@ -44,11 +60,31 @@ class Charger:
 
     def error_occur(self):
         print("error")
-        # TODO 1: Sensehat: Display "X" in RED.
+
+        # Sensehat: Display "X" in RED.
+        red = (255, 0, 0)
+        x_pattern = [
+            red, 0, 0, 0, 0, 0, 0, red,
+            0, red, 0, 0, 0, 0, red, 0,
+            0, 0, red, 0, 0, red, 0, 0,
+            0, 0, 0, red, red, 0, 0, 0,
+            0, 0, 0, red, red, 0, 0, 0,
+            0, 0, red, 0, 0, red, 0, 0,
+            0, red, 0, 0, 0, 0, red, 0,
+            red, 0, 0, 0, 0, 0, 0, red
+        ]
+        sense.set_pixels(x_pattern)
 
     def error_resolved(self):
         print("resolved the error")
-        # TODO 1: Sensehat: Display GREEN screen
+        
+        # Sensehat: Blink GREEN screen for 5 seconds.
+        for i in range(10):
+            sense.clear([82, 100, 11]) # Sets screen to LIME YELLOW.
+            time.sleep(0.5)
+            sense.clear([0, 0, 0]) # Turn OFF screen.
+
+        sense.clear([82, 100, 11]) # Set screen to LIME YELLOW.
 
 init_to_idle = {
     "source": "init",
