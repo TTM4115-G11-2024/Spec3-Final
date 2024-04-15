@@ -18,16 +18,31 @@ MQTT_TOPIC_INPUT = "charger_percent"
 MQTT_TOPIC_OUTPUT = "charger_percent"
 
 
+cfrom stmpy import Machine, Driver
+
+import ipywidgets as widgets
+from IPython.display import display
+
+
 class CarBattery:
     def __init__(self, perc, act_perc):
-        self.connected = False
+        self.charger_connected = False
         self.wanted_perc = perc
         self.actual_perc = act_perc
 
-    def send_update(self, update, charger):
-        self.charger.send(
-            "percentage"
-        )  # car sends to charger how much battery it has left
+    def charger_plugged(self):
+        self.charger_connected = True
+        print(self.stm.driver.print_status())
+        print("Car connected")
+
+    def charger_unplugged(self):
+        self.charger_connected = False
+        print(self.stm.driver.print_status())
+        print("Car disconnected")
+
+    def send_update(self, charger):
+        print("send update")
+        self.charger.send('percentage')  #car sends to charger how much battery it has left
         print(self.stm.driver.print_status())
 
     def charged_compound_transition(self):
@@ -35,11 +50,17 @@ class CarBattery:
         if self.actual_perc == percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
-            return "idle"
+            return 'idle'
+        elif self.actual_perc > percentage:
+            print("Charging completed!")
+            print(self.stm.driver.print_status())
+            return 'idle'
         else:
             self.actual_perc += 1
+            print(self.actual_perc)
             print(self.stm.driver.print_status())
-            return "charging"
+            return 'charging'
+
 
 
 battery = CarBattery(80, 90)
