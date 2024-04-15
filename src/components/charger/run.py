@@ -44,9 +44,11 @@ class Charger:
 
     def error_occur(self):
         print("error")
+        # TODO 1: Sensehat: Display "X" in RED.
 
     def error_resolved(self):
         print("resolved the error")
+        # TODO 1: Sensehat: Display GREEN screen
 
 init_to_idle = {
     "source": "init",
