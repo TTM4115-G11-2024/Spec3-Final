@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 class App(object):
     def __init__(self):
         self.car_id = None
+        self.chosen_station = None
+        self.chosen_percentage = None
+
         self.app = gui()
         self.run()
         self.app.go()
@@ -61,6 +64,8 @@ class App(object):
         self.app.setEntry('Insert Station ID', '#')
         self.app.addLabelEntry('Insert Desired Charge')
         self.app.setEntry('Insert Desired Charge', '100%')
+        self.chosen_station = self.app.getEntry('Insert Station ID')
+        self.chosen_percentage = self.app.getEntry('Insert Desired Charge')
         self.app.addButton("Confirm charging", self.start_charging)
 
         self.app.stopSubWindow()
