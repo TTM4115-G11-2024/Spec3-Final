@@ -17,13 +17,16 @@ class Charger:
     #     else:
     #         self.stm.send('no_hand')
 
-    # called by the initial transition
+    # Connected nozzle, and need to authenticate user.
     def charger_nozzle_detected(self):
         print("connected")
+        # TODO 1: Sensehat: Display ORANGE screen.
 
     def charger_nozzle_disconnected(self):
         print("disconnected")
-        self.idle
+        # TODO 1: Sensehat: Blink GREEN screen for 5 seconds.
+        # TODO 2: Sensehat: Display GREEN screen
+        #self.idle
 
     def activate_charger(self, user, time):
         if user in accped_users and time in accped_users[user]:
@@ -45,9 +48,13 @@ class Charger:
     def error_resolved(self):
         print("resolved the error")
 
+init_to_idle = {
+    "source": "init",
+    "target": "idle",
+}
 
 idle_to_connected = {
-    "source": "initial",
+    "source": "idle",
     "target": "connected",
     "effect": "charger_nozzle_detected",
 }
@@ -95,6 +102,7 @@ charger = Charger()
 
 charger_machine = Machine(
     transitions=[
+        init_to_idle,
         idle_to_connected,
         connected_to_charging,
         connected_to_idle,
