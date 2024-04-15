@@ -1,4 +1,5 @@
 # Raspberry Pi
+## Information about the Pi
 Hostname: raspberrypi
 
 Username: g11
