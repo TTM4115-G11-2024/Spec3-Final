@@ -42,53 +42,49 @@ class CarBattery:
             return "charging"
 
 
-battery = CarBattery()
-
-# initial transition
+battery = CarBattery(80, 90)
+       
+#initial transition
 initial_to_charging = {
-    "source": "initial",
-    "target": "charging",
-    "effect": "charger_plugged",
+    'source': 'initial',
+    'target': 'charging',
+    'effect': 'charger_plugged'
 }
 
-# compound transition
+#compound transition
 charging_to_choose = {
-    "trigger": "t",
-    "source": "charging",
-    "function": battery.charged_compound_transition,
+    'trigger': 't',
+    'source': 'charging',
+    'function': battery.charged_compound_transition
 }
 
-# the other regular transition
+#the other regular transition
 idle_to_final = {
-    "trigger": "charger_unplugged",
-    "source": "idle",
-    "target": "final",
+    'trigger': 'charger_unplugged',
+    'source': 'idle',
+    'target': 'final'
 }
 
-# the states:
-charging = {
-    "name": "charging",
-    "entry": "send_update(update, charger); start_timer('t', 500)",
+#the states:
+charging = { 'name': 'charging',
+            'entry': 'start_timer("t", 500)'
 }
-# idle = { "name": "idle",
-#        "entry": ""
-# }
+
+idle = { 'name': 'idle'
+}   
 
 
-# create the State Machine
-car_battery_machine = Machine(
-    transitions=[initial_to_charging, charging_to_choose, idle_to_final],
-    obj=battery,
-    name="car_battery",
-)
+
+#create the State Machine
+car_battery_machine = Machine(transitions=[initial_to_charging,charging_to_choose,idle_to_final], obj=battery, name='car_battery', states=[charging, idle])
 battery.stm = car_battery_machine
 
-# create a driver
+#create a driver
 driver = Driver()
-# add our state machine to the driver
+#add our state machine to the driver
 driver.add_machine(car_battery_machine)
-# start driver
-driver.start(max_transitions=30)
+#start driver
+driver.start(max_transitions=100)
 
 
 class MQTT_Client:
