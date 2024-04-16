@@ -18,17 +18,12 @@ MQTT_TOPIC_INPUT = "charger_percent"
 MQTT_TOPIC_OUTPUT = "charger_percent"
 
 
-cfrom stmpy import Machine, Driver
-
-import ipywidgets as widgets
-from IPython.display import display
-
 
 class CarBattery:
-    def __init__(self, perc, act_perc):
+    def __init__(self, perc):
+        self.battery_percentage = random.randrange(10, 30)  #actual battery of the car
         self.charger_connected = False
         self.wanted_perc = perc
-        self.actual_perc = act_perc
 
     def charger_plugged(self):
         self.charger_connected = True
@@ -42,29 +37,27 @@ class CarBattery:
 
     def send_update(self, charger):
         print("send update")
-        self.charger.send('percentage')  #car sends to charger how much battery it has left
+        self.mqtt_client.publish("charger_percent", self.battery_percentage)  #car sends to charger how much battery it has left
         print(self.stm.driver.print_status())
 
     def charged_compound_transition(self):
         percentage = self.wanted_perc
-        if self.actual_perc == percentage:
+        if self.battery_percentage == percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
             return 'idle'
-        elif self.actual_perc > percentage:
+        elif self.battery_percentage > percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
             return 'idle'
         else:
-            self.actual_perc += 1
-            print(self.actual_perc)
+            self.battery_percentage += 1
+            print(self.battery_percentage)
             print(self.stm.driver.print_status())
             return 'charging'
 
+battery = CarBattery(90)
 
-
-battery = CarBattery(80, 90)
-       
 #initial transition
 initial_to_charging = {
     'source': 'initial',
@@ -93,19 +86,6 @@ charging = { 'name': 'charging',
 
 idle = { 'name': 'idle'
 }   
-
-
-
-#create the State Machine
-car_battery_machine = Machine(transitions=[initial_to_charging,charging_to_choose,idle_to_final], obj=battery, name='car_battery', states=[charging, idle])
-battery.stm = car_battery_machine
-
-#create a driver
-driver = Driver()
-#add our state machine to the driver
-driver.add_machine(car_battery_machine)
-#start driver
-driver.start(max_transitions=100)
 
 
 class MQTT_Client:
@@ -139,8 +119,28 @@ class MQTT_Client:
         print("Car disconnected")
 
     def start(self, broker, port):
-        self.client = mqtt.Client()
+        #self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+        print("Connecting to {}:{}", format(broker, port))
         self.client.connect(broker, port)
         self.client.subscribe("charger_percent")
+
+
+       
+#create the State Machine
+car_battery_machine = Machine(transitions=[initial_to_charging,charging_to_choose,idle_to_final], obj=battery, name='car_battery', states=[charging, idle])
+battery.stm = car_battery_machine
+
+#create a driver
+driver = Driver()
+#add our state machine to the driver
+driver.add_machine(car_battery_machine)
+
+myclient = MQTT_Client()
+battery.mqtt_client = myclient.client
+myclient.stm_driver = driver
+
+#start driver
+driver.start(max_transitions=100)
+myclient.start(MQTT_BROKER, MQTT_PORT)
