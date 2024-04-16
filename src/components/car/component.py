@@ -88,10 +88,10 @@ idle = { 'name': 'idle'
 }   
 
 
-class MQTT_Client:
+class MQTT_Client_1:
     def __init__(self):
         self.battery_percentage = random.randrange(10, 30)
-        self.client = mqtt.Client()
+        self.client = mqtt.Client
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
 
@@ -137,7 +137,7 @@ driver = Driver()
 #add our state machine to the driver
 driver.add_machine(car_battery_machine)
 
-myclient = MQTT_Client()
+myclient = MQTT_Client_1()
 battery.mqtt_client = myclient.client
 myclient.stm_driver = driver
 
