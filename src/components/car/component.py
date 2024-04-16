@@ -35,9 +35,9 @@ class CarBattery:
         print(self.stm.driver.print_status())
         print("Car disconnected")
 
-    def send_update(self, charger):
+    def send_update(self):
         print("send update")
-        self.mqtt_client.publish("charger_percent", self.battery_percentage)  #car sends to charger how much battery it has left
+        self.mqtt_client.publish(MQTT_TOPIC_OUTPUT, self.battery_percentage)  #car sends to charger how much battery it has left
         print(self.stm.driver.print_status())
 
     def charged_compound_transition(self):
@@ -81,7 +81,7 @@ idle_to_final = {
 
 #the states:
 charging = { 'name': 'charging',
-            'entry': 'start_timer("t", 500)'
+            'entry': 'send_update; start_timer("t", 500)'
 }
 
 idle = { 'name': 'idle'
@@ -91,7 +91,7 @@ idle = { 'name': 'idle'
 class MQTT_Client_1:
     def __init__(self):
         self.battery_percentage = random.randrange(10, 30)
-        self.client = mqtt.Client
+        self.client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
 
@@ -122,8 +122,9 @@ class MQTT_Client_1:
         #self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        print("Connecting to {}:{}", format(broker, port))
-        self.client.connect(broker, port)
+        print("Connecting to {}:{}".format(MQTT_BROKER, MQTT_PORT))
+        self.client.connect(MQTT_BROKER, MQTT_PORT)
+        
         self.client.subscribe("charger_percent")
 
 
