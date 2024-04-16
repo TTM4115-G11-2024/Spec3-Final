@@ -1,10 +1,30 @@
-# def run():
-#     print("Hello from charger")
-from stmpy import Machine, Driver
-from IPython.display import display
-import ipywidgets as widgets
 import time
+
+import ipywidgets as widgets
+import paho.mqtt.client as mqtt
+from IPython.display import display
 from sense_hat import SenseHat
+from stmpy import Driver, Machine
+
+current_battery_percentage = None
+
+
+def on_message(client, userdata, message):
+    info = message.payload.decode()
+
+    if info.startswith("b"):  # NOTE: the battery must send 'bXX' as the MQTT msg
+        number_part = info[1:]
+        current_battery_percentage = int(number_part)
+
+
+mqttBroker = "mqtt.eclipseprojects.io"
+client = mqtt.Client("Charger")
+client.connect(mqttBroker)
+
+client.loop_forever()
+client.subscribe("komsysgroup11spec3")
+client.on_message = on_message
+
 
 sense = SenseHat()
 
@@ -30,19 +50,19 @@ class Charger:
     # Connected nozzle, and need to authenticate user.
     def charger_nozzle_detected(self):
         print("connected")
-        sense.clear([255, 165, 0]) # Sets screen to ORANGE.
+        sense.clear([255, 165, 0])  # Sets screen to ORANGE.
 
     def charger_nozzle_disconnected(self):
         print("disconnected")
 
         # Sensehat: Blink GREEN screen for 5 seconds.
         for i in range(10):
-            sense.clear([82, 100, 11]) # Sets screen to LIME YELLOW.
+            sense.clear([82, 100, 11])  # Sets screen to LIME YELLOW.
             time.sleep(0.5)
-            sense.clear([0, 0, 0]) # Turn OFF screen.
+            sense.clear([0, 0, 0])  # Turn OFF screen.
 
-        sense.clear([82, 100, 11]) # Set screen to LIME YELLOW.
-        #self.idle
+        sense.clear([82, 100, 11])  # Set screen to LIME YELLOW.
+        # self.idle
 
     def activate_charger(self, user, time):
         if user in accped_users and time in accped_users[user]:
@@ -53,33 +73,31 @@ class Charger:
             print("user has no reserved timeslot")
             self.connected
 
-
-
     def display_two_digits(a_number):
 
         # Digit patterns
         digits0_9 = [
             [2, 9, 11, 17, 19, 25, 27, 33, 35, 42],  # 0
-            [2, 9, 10, 18, 26, 34, 41, 42, 43],      # 1
-            [2, 9, 11, 19, 26, 33, 41, 42, 43],      # 2
-            [1, 2, 11, 18, 27, 35, 41, 42],          # 3
-            [3, 10, 11, 17, 19, 25, 26, 27, 35, 43], # 4
-            [1, 2, 3, 9, 17, 18, 27, 35, 41, 42],    # 5
-            [2, 3, 9, 17, 18, 25, 27, 33, 35, 42],   # 6
-            [1, 2, 3, 9, 11, 19, 26, 34, 42],        # 7
-            [2, 9, 11, 18, 25, 27, 33, 35, 42],      # 8
-            [2, 9, 11, 17, 19, 26, 27, 35, 43]       # 9
+            [2, 9, 10, 18, 26, 34, 41, 42, 43],  # 1
+            [2, 9, 11, 19, 26, 33, 41, 42, 43],  # 2
+            [1, 2, 11, 18, 27, 35, 41, 42],  # 3
+            [3, 10, 11, 17, 19, 25, 26, 27, 35, 43],  # 4
+            [1, 2, 3, 9, 17, 18, 27, 35, 41, 42],  # 5
+            [2, 3, 9, 17, 18, 25, 27, 33, 35, 42],  # 6
+            [1, 2, 3, 9, 11, 19, 26, 34, 42],  # 7
+            [2, 9, 11, 18, 25, 27, 33, 35, 42],  # 8
+            [2, 9, 11, 17, 19, 26, 27, 35, 43],  # 9
         ]
 
         black = (0, 0, 0)
         color = (255, 255, 255)
-        
+
         if a_number < 0:
             negative = True
             a_number = abs(a_number)
         else:
             negative = False
-            
+
         first_digit = int(int(a_number / 10) % 10)
         second_digit = int(a_number % 10)
 
@@ -90,18 +108,18 @@ class Charger:
             pixels[digit_glyph[i]] = color
         digit_glyph = digits0_9[second_digit]
         for i in range(0, len(digit_glyph)):
-            pixels[digit_glyph[i]+4] = color
-        
+            pixels[digit_glyph[i] + 4] = color
+
         # set pixels for a minus sign for negatives
         if negative:
             pixels[56] = color
             pixels[57] = color
             pixels[58] = color
-        
+
         # set bottom right pixel if number is more than 2 digits
         if a_number > 99:
             pixels[63] = color
-        
+
         # display the result
         sense.set_pixels(pixels)
 
@@ -121,13 +139,11 @@ class Charger:
             sense.clear([0, 0, 0])
 
             # Displays a two digit number on the SenseHat in WHITE.
-            display_two_digits(battery_status)
-
+            # display_two_digits(battery_status)
 
     def charged(self, user, time):
         print("time is up")
         print("done charging")
-        self.idle
 
     def error_occur(self):
         print("error")
@@ -135,27 +151,84 @@ class Charger:
         # Sensehat: Display "X" in RED.
         red = (255, 0, 0)
         x_pattern = [
-            red, 0, 0, 0, 0, 0, 0, red,
-            0, red, 0, 0, 0, 0, red, 0,
-            0, 0, red, 0, 0, red, 0, 0,
-            0, 0, 0, red, red, 0, 0, 0,
-            0, 0, 0, red, red, 0, 0, 0,
-            0, 0, red, 0, 0, red, 0, 0,
-            0, red, 0, 0, 0, 0, red, 0,
-            red, 0, 0, 0, 0, 0, 0, red
+            red,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            red,
+            0,
+            red,
+            0,
+            0,
+            0,
+            0,
+            red,
+            0,
+            0,
+            0,
+            red,
+            0,
+            0,
+            red,
+            0,
+            0,
+            0,
+            0,
+            0,
+            red,
+            red,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            red,
+            red,
+            0,
+            0,
+            0,
+            0,
+            0,
+            red,
+            0,
+            0,
+            red,
+            0,
+            0,
+            0,
+            red,
+            0,
+            0,
+            0,
+            0,
+            red,
+            0,
+            red,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            red,
         ]
         sense.set_pixels(x_pattern)
 
     def error_resolved(self):
         print("resolved the error")
-        
+
         # Sensehat: Blink GREEN screen for 5 seconds.
         for i in range(10):
-            sense.clear([82, 100, 11]) # Sets screen to LIME YELLOW.
+            sense.clear([82, 100, 11])  # Sets screen to LIME YELLOW.
             time.sleep(0.5)
-            sense.clear([0, 0, 0]) # Turn OFF screen.
+            sense.clear([0, 0, 0])  # Turn OFF screen.
 
-        sense.clear([82, 100, 11]) # Set screen to LIME YELLOW.
+        sense.clear([82, 100, 11])  # Set screen to LIME YELLOW.
+
 
 init_to_idle = {
     "source": "init",

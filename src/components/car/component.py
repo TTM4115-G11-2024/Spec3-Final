@@ -1,27 +1,34 @@
-from stmpy import Machine, Driver
+import json
+import logging
+import random
+import time
+from threading import Thread
 
 import ipywidgets as widgets
-from IPython.display import display
 import paho.mqtt.client as mqtt
 import stmpy
-import logging
-from threading import Thread
-import json
-import random
+from IPython.display import display
+from stmpy import Driver, Machine
 
-# TODO: choose proper MQTT broker address
-MQTT_BROKER = "test.mosquitto.org"
-MQTT_PORT = 1883
+current_battery_percentage = random.randrange(10, 30)
 
-# TODO: choose proper topics for communication
-MQTT_TOPIC_INPUT = "charger_percent"
-MQTT_TOPIC_OUTPUT = "charger_percent"
 
+mqttBroker = "mqtt.eclipseprojects.io"
+client = mqtt.Client("Charger")
+client.connect(mqttBroker)
+
+client.loop_forever()
+client.subscribe("komsysgroup11spec3")
+
+
+while True:
+    client.publish(f"b{current_battery_percentage}")
+    time.sleep(5)
 
 
 class CarBattery:
     def __init__(self, perc):
-        self.battery_percentage = random.randrange(10, 30)  #actual battery of the car
+        self.battery_percentage = random.randrange(10, 30)  # actual battery of the car
         self.charger_connected = False
         self.wanted_perc = perc
 
@@ -37,7 +44,9 @@ class CarBattery:
 
     def send_update(self, charger):
         print("send update")
-        self.mqtt_client.publish("charger_percent", self.battery_percentage)  #car sends to charger how much battery it has left
+        self.mqtt_client.publish(
+            "charger_percent", self.battery_percentage
+        )  # car sends to charger how much battery it has left
         print(self.stm.driver.print_status())
 
     def charged_compound_transition(self):
@@ -45,47 +54,41 @@ class CarBattery:
         if self.battery_percentage == percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
-            return 'idle'
+            return "idle"
         elif self.battery_percentage > percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
-            return 'idle'
+            return "idle"
         else:
             self.battery_percentage += 1
             print(self.battery_percentage)
             print(self.stm.driver.print_status())
-            return 'charging'
+            return "charging"
+
 
 battery = CarBattery(90)
 
-#initial transition
+# initial transition
 initial_to_charging = {
-    'source': 'initial',
-    'target': 'charging',
-    'effect': 'charger_plugged'
+    "source": "initial",
+    "target": "charging",
+    "effect": "charger_plugged",
 }
 
-#compound transition
+# compound transition
 charging_to_choose = {
-    'trigger': 't',
-    'source': 'charging',
-    'function': battery.charged_compound_transition
+    "trigger": "t",
+    "source": "charging",
+    "function": battery.charged_compound_transition,
 }
 
-#the other regular transition
-idle_to_final = {
-    'trigger': 'charger_unplugged',
-    'source': 'idle',
-    'target': 'final'
-}
+# the other regular transition
+idle_to_final = {"trigger": "charger_unplugged", "source": "idle", "target": "final"}
 
-#the states:
-charging = { 'name': 'charging',
-            'entry': 'start_timer("t", 500)'
-}
+# the states:
+charging = {"name": "charging", "entry": 'start_timer("t", 500)'}
 
-idle = { 'name': 'idle'
-}   
+idle = {"name": "idle"}
 
 
 class MQTT_Client:
@@ -94,9 +97,6 @@ class MQTT_Client:
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-
-    def on_connect(self, client, userdata, flags, rc):
-        print("on_connect(): {}".format(mqtt.connack_string(rc)))
 
     def on_message(self, msg):
         if msg == "connected":
@@ -119,7 +119,7 @@ class MQTT_Client:
         print("Car disconnected")
 
     def start(self, broker, port):
-        #self.client = mqtt.Client()
+        # self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         print("Connecting to {}:{}", format(broker, port))
@@ -127,20 +127,23 @@ class MQTT_Client:
         self.client.subscribe("charger_percent")
 
 
-       
-#create the State Machine
-car_battery_machine = Machine(transitions=[initial_to_charging,charging_to_choose,idle_to_final], obj=battery, name='car_battery', states=[charging, idle])
+# create the State Machine
+car_battery_machine = Machine(
+    transitions=[initial_to_charging, charging_to_choose, idle_to_final],
+    obj=battery,
+    name="car_battery",
+    states=[charging, idle],
+)
 battery.stm = car_battery_machine
 
-#create a driver
+# create a driver
 driver = Driver()
-#add our state machine to the driver
+# add our state machine to the driver
 driver.add_machine(car_battery_machine)
 
 myclient = MQTT_Client()
 battery.mqtt_client = myclient.client
 myclient.stm_driver = driver
 
-#start driver
+# start driver
 driver.start(max_transitions=100)
-myclient.start(MQTT_BROKER, MQTT_PORT)
