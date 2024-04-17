@@ -1,1 +1,0 @@
-MQTT_SERVER = "localhost"

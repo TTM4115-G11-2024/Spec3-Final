@@ -29,11 +29,5 @@ pip install -r requirements.txt
 Activate the virtual environment with `source env/bin/activate` (Mac/Linux).
 Run the application with:
 ```
-python src/main.py <component-name>
+python src/components/<component-name>/run.py
 ```
-
-The attribute `component-name`can be one of the following:
-* `car`
-* `charger`
-* `app`
-* `server`
