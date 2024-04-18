@@ -13,9 +13,12 @@ def on_message(client, message):
     info = message.payload.decode()
 
     if info.startswith("b"):  # NOTE: the battery must send 'bXX' as the MQTT msg
-        number_part = info[1:]
+        battery = info[1:]
         #current_battery_percentage = int(number_part)
-        return int(number_part)
+        return int(battery)
+    elif info.startswith("car "): #NOTE: the battery is supposed to send: car XXXXXX connected
+        carID = info[1:]
+        return carID
 
 
 #mqttBroker = "mqtt.eclipseprojects.io"
@@ -73,7 +76,7 @@ class Charger:
         sense.clear([82, 100, 11])  # Set screen to LIME YELLOW.
         # self.idle
 
-    def activate_charger(self, user, time):
+    def activate_charger(self, user, time): 
         if user in accped_users and time in accped_users[user]:
             print(f"charging until{reservation_time_and_battery[time]} or time is up")
             self.charged(user, time)
@@ -249,7 +252,7 @@ init_to_idle = {
 idle_to_connected = {
     "source": "idle",
     "target": "connected",
-    "effect": "charger_nozzle_detected",
+    "effect": "charger_nozzle_detected; activate_charging",
 }
 connected_to_idle = {
     "source": "connected",

@@ -182,7 +182,7 @@ class CarBattery:
         print("charger_plugged")
         self.charger_connected = True
         print(self.stm.driver.print_status())
-        self.mqtt_client.publish(MQTT_TOPIC[1] + str(self.chargerID), "car" + str(self.car_ID) + "connected")  
+        self.mqtt_client.publish(MQTT_TOPIC[1] + str(self.chargerID), "car " + str(self.car_ID) + " connected")  
         print(MQTT_TOPIC[1] + str(self.chargerID))
         #car sends to charger confirmation that it has been connected (the message is NOT received in MQTT)
         print("send " + MQTT_TOPIC[1] + str(self.chargerID))
@@ -256,10 +256,10 @@ class MQTT_Client_1:
         self.client.on_message = self.on_message
         print("Connecting to {}:{}".format(MQTT_BROKER, MQTT_PORT))
         self.client.connect(MQTT_BROKER, MQTT_PORT)
-        #for topic in MQTT_TOPIC:
-            #self.client.subscribe(topic)
-        self.client.subscribe(MQTT_TOPIC[0])
-        self.client.subscribe(MQTT_TOPIC[1])
+        for topic in MQTT_TOPIC:
+            self.client.subscribe(topic)
+        #self.client.subscribe(MQTT_TOPIC[0])
+        #self.client.subscribe(MQTT_TOPIC[1])
 
        
 # Create MQTT Client
