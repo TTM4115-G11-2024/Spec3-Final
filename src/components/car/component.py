@@ -179,9 +179,11 @@ class CarBattery:
         self.chargerID = 10 #TODO: how does the car know the chargerID to which it is connected
 
     def charger_plugged(self):
+        print("charger_plugged")
         self.charger_connected = True
         print(self.stm.driver.print_status())
         self.mqtt_client.publish(MQTT_TOPIC[1] + str(self.chargerID), "car" + str(self.car_ID) + "connected")  
+        print(MQTT_TOPIC[1] + str(self.chargerID))
         #car sends to charger confirmation that it has been connected (the message is NOT received in MQTT)
         print("send " + MQTT_TOPIC[1] + str(self.chargerID))
         #car sends ID to charger so that it can check wheter it is allow to charge or not
@@ -194,6 +196,7 @@ class CarBattery:
 
     def send_update(self):
         print("send update")
+        print(MQTT_TOPIC[0] + str(self.car_ID))
         self.mqtt_client.publish(MQTT_TOPIC[0] + str(self.car_ID), "b" + str(self.battery_percentage))  
         #car sends to charger how much battery it has left, it has the format bXX
         print(self.battery_percentage)
@@ -215,36 +218,6 @@ class CarBattery:
             print(self.stm.driver.print_status())
             return 'charging'
 
-battery = CarBattery(90, "AB12345")
-
-#initial transition
-initial_to_charging = {
-    'source': 'initial',
-    'target': 'charging',
-    'effect': 'charger_plugged'
-}
-
-#compound transition
-charging_to_choose = {
-    'trigger': 't',
-    'source': 'charging',
-    'function': battery.charged_compound_transition
-}
-
-#the other regular transition
-idle_to_final = {
-    'trigger': 'charger_unplugged',
-    'source': 'idle',
-    'target': 'final'
-}
-
-#the states:
-charging = { 'name': 'charging',
-            'entry': 'send_update; start_timer("t", 500)'
-}
-
-idle = { 'name': 'idle'
-}   
 
 
 class MQTT_Client_1:
@@ -289,19 +262,50 @@ class MQTT_Client_1:
         self.client.subscribe(MQTT_TOPIC[1])
 
        
-#create the State Machine
+# Create MQTT Client
+myclient = MQTT_Client_1()
+myclient.start(MQTT_BROKER, MQTT_PORT)
+
+
+# Create the State Machine
+battery = CarBattery(90, "AB12345")
+
+#initial transition
+initial_to_charging = {
+    'source': 'initial',
+    'target': 'charging',
+    'effect': 'charger_plugged'
+}
+
+#compound transition
+charging_to_choose = {
+    'trigger': 't',
+    'source': 'charging',
+    'function': battery.charged_compound_transition
+}
+
+#the other regular transition
+idle_to_final = {
+    'trigger': 'charger_unplugged',
+    'source': 'idle',
+    'target': 'final'
+}
+
+#the states:
+charging = { 'name': 'charging',
+            'entry': 'send_update; start_timer("t", 500)'
+}
+
+idle = { 'name': 'idle'
+}   
+
+# Initialize state machine
 car_battery_machine = Machine(transitions=[initial_to_charging,charging_to_choose,idle_to_final], obj=battery, name='car_battery', states=[charging, idle])
 battery.stm = car_battery_machine
+battery.mqtt_client = myclient.client
 
 #create a driver
 driver = Driver()
-#add our state machine to the driver
-driver.add_machine(car_battery_machine)
-
-myclient = MQTT_Client_1()
-battery.mqtt_client = myclient.client
 myclient.stm_driver = driver
-
-#start driver
+driver.add_machine(car_battery_machine)
 driver.start(max_transitions=100)
-myclient.start(MQTT_BROKER, MQTT_PORT)
