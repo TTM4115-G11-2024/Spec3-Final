@@ -15,6 +15,7 @@ class Charger(Base):
 
     id = Column(Integer, primary_key=True)
     is_reservable = Column(Boolean, default=False)
+    is_available = Column(Boolean, default=True)
 
     station_id = Column(Integer, ForeignKey("stations.id"))
 

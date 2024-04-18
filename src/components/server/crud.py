@@ -35,6 +35,26 @@ def create_charger(db: Session, charger: schemas.ChargerCreate):
     db.refresh(db_charger)
     return db_charger
 
+def activate_charger(db: Session, charger_id: int):
+    db_charger = db.query(models.Charger).filter(models.Charger.id == charger_id).first()
+    if db_charger is not None: # TODO: add error handling
+        db_charger.is_available = False
+        db.commit()
+        db.refresh(db_charger)
+        return db_charger
+
+def update_charger(db: Session, charger_id: int, updated_charger: schemas.ChargerUpdate):
+    db_charger = db.query(models.Charger).filter(models.Charger.id == charger_id).first()
+    if db_charger is not None: # TODO: add error handling
+        if updated_charger.is_reservable is not None:
+            db_charger.is_reservable = update_charger.is_reservable
+        if updated_charger.is_available is not None:
+            db_charger.is_available = updated_charger.is_available
+        
+        db.commit()
+        db.refresh(db_charger)
+        return db_charger
+
 
 # Charging Station
 def get_charging_station(db: Session, charging_station_id: int):
