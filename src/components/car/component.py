@@ -1,4 +1,4 @@
-import json
+'''import json
 import logging
 import random
 import time
@@ -150,7 +150,8 @@ myclient.stm_driver = driver
 driver.start(max_transitions=100)
 
 
-'''from stmpy import Machine, Driver
+'''
+from stmpy import Machine, Driver
 
 import ipywidgets as widgets
 from IPython.display import display
@@ -166,9 +167,7 @@ MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
 
 # TODO: choose proper topics for communication
-MQTT_TOPIC_INPUT = "charger_percent"
-MQTT_TOPIC_OUTPUT = "charger_percent"
-
+MQTT_TOPIC = "charger_percent"
 
 
 class CarBattery:
@@ -189,7 +188,8 @@ class CarBattery:
 
     def send_update(self):
         print("send update")
-        self.mqtt_client.publish(MQTT_TOPIC_OUTPUT, self.battery_percentage)  #car sends to charger how much battery it has left
+        self.mqtt_client.publish(MQTT_TOPIC, self.battery_percentage)  #car sends to charger how much battery it has left
+        print(self.battery_percentage)
         print(self.stm.driver.print_status())
 
     def charged_compound_transition(self):
@@ -297,4 +297,3 @@ myclient.stm_driver = driver
 #start driver
 driver.start(max_transitions=100)
 myclient.start(MQTT_BROKER, MQTT_PORT)
-'''
