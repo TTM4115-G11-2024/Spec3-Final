@@ -5,6 +5,7 @@ from database import get_db
 from fastapi import Depends, HTTPException
 import crud
 from mqtt import MQTTClient
+import utils
 
 router = APIRouter()
 
@@ -119,4 +120,22 @@ def create_reservation(reservation: schemas.ReservationCreate, db: Session = Dep
     db_charger = crud.get_charger(db, reservation.charger_id)
     if db_charger is None:
         raise HTTPException(status_code=404, detail="Charger of charger_id does not exist")
+    
+    if utils.is_date_aware(reservation.start_time) or utils.is_date_aware(reservation.end_time):
+        # Format of date should be: YYYY-MM-DDTHH:MM (ISO)
+        raise HTTPException(
+            status_code=400, 
+            detail="One of the datetimes are aware, e.g. specified with a timezone. The dates should be naive."
+            )
+    
+    if utils.is_date_passed(reservation.start_time) or utils.is_date_passed(reservation.end_time):
+        raise HTTPException(status_code=400, detail="One of the datetimes has already passed.")
+    
+    
+    if not (utils.is_valid_time(reservation.start_time) and utils.is_valid_time(reservation.end_time)):
+        raise HTTPException(status_code=400, detail="The start time or end time is not XX:30 or XX:00") 
+
+    if not utils.is_30_minutes(reservation.start_time, reservation.end_time):
+        raise HTTPException(status_code=400, detail="Time slot is not exactly 30 minutes long.")
+
     return crud.create_reservation(db, reservation)
