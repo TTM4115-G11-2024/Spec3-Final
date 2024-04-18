@@ -171,14 +171,17 @@ MQTT_TOPIC = "charger_percent"
 
 
 class CarBattery:
-    def __init__(self, perc):
+    def __init__(self, perc, carID):
         self.battery_percentage = random.randrange(10, 30)  #actual battery of the car
         self.charger_connected = False
         self.wanted_perc = perc
+        self.car_ID = carID
 
     def charger_plugged(self):
         self.charger_connected = True
         print(self.stm.driver.print_status())
+        self.mqtt_client.publish(MQTT_TOPIC, self.car_ID)  
+        #car sends ID to charger so that it can check wheter it is allow to charge or not
         print("Car connected")
 
     def charger_unplugged(self):
@@ -188,13 +191,15 @@ class CarBattery:
 
     def send_update(self):
         print("send update")
-        self.mqtt_client.publish(MQTT_TOPIC, self.battery_percentage)  #car sends to charger how much battery it has left
+        self.mqtt_client.publish(MQTT_TOPIC, "b" + self.battery_percentage)  
+        #car sends to charger how much battery it has left, it has the format bXX
         print(self.battery_percentage)
         print(self.stm.driver.print_status())
 
     def charged_compound_transition(self):
         percentage = self.wanted_perc
         if self.battery_percentage == percentage:
+        #if on_message = 
             print("Charging completed!")
             print(self.stm.driver.print_status())
             return 'idle'
@@ -208,7 +213,7 @@ class CarBattery:
             print(self.stm.driver.print_status())
             return 'charging'
 
-battery = CarBattery(90)
+battery = CarBattery(90, "9700DFZ")
 
 #initial transition
 initial_to_charging = {

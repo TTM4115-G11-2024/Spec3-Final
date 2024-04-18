@@ -9,20 +9,28 @@ from stmpy import Driver, Machine
 current_battery_percentage = None
 
 
-def on_message(client, userdata, message):
+def on_message(client, message):
     info = message.payload.decode()
 
     if info.startswith("b"):  # NOTE: the battery must send 'bXX' as the MQTT msg
         number_part = info[1:]
-        current_battery_percentage = int(number_part)
+        #current_battery_percentage = int(number_part)
+        return int(number_part)
 
 
-mqttBroker = "mqtt.eclipseprojects.io"
-client = mqtt.Client("Charger")
-client.connect(mqttBroker)
+#mqttBroker = "mqtt.eclipseprojects.io"
+#client = mqtt.Client("Charger")
+#client.connect(mqttBroker)
 
+MQTT_BROKER = "test.mosquitto.org"
+MQTT_PORT = 1883
+MQTT_TOPIC = ["charger_percent", "ttm4115/g11/cars/"]
+
+client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
+client.connect(MQTT_BROKER, MQTT_PORT)
 client.loop_forever()
-client.subscribe("komsysgroup11spec3")
+client.subscribe(MQTT_TOPIC)
+
 client.on_message = on_message
 
 
@@ -35,6 +43,7 @@ b = 0
 msleep = lambda x: time.sleep(x / 1000.0)
 
 accped_users = {"Adrian": ["18:00", "20:00"], "Sindre": ["13:45"]}
+
 reservation_time_and_battery = {"18:00": [67], "20:00": [55], "13:45": [44]}
 
 
@@ -124,12 +133,14 @@ class Charger:
         sense.set_pixels(pixels)
 
     # TODO: Not sure if "battery_status" should be a parameter like this or how we get it.
-    def charging_status(self, battery_status, battery_cap):
+    def charging_status(self, battery_cap):
+        battery_status = on_message(client, client.on_message) 
+        #charger listens to MQTT messages and gets battery percentage from car
         print(f"battery status: {battery_status}")
         if battery_status == battery_cap:
             print("Done charging")
             # Activate the trigger "charged".
-
+            self.mqtt_client.publish(MQTT_TOPIC, "charged")   #charger confirms the car it is fully charged
         else:
             # Activate the trigger "not_charged".
 
