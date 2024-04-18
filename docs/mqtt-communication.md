@@ -3,6 +3,7 @@
 ## sd Charging Communication
 
 ### Current battery percentage from Car to Charger:
+Topic: `ttm4115/g11/chargers/<charger_id>`
 ```
 {
   "command": "battery_percentage",
@@ -11,6 +12,7 @@
 ```
 
 ### Stop charging from Charger to Car:
+Topic: `ttm4115/g11/cars/<car_id>`
 ```
 {
   "command": "stop_charging"
@@ -19,9 +21,9 @@
 
 ## sd Charging for User
 ### "Request Activation and Make Charging unit unavailable":
+`HTTP POST REQUEST, coming soon`
 ```
 {
-  "command": "activate_charger",
   "charger_id": <id of charger>,
   "car_id": <id of car>,
   "battery_target": <target percentage of car battery>,
@@ -29,15 +31,10 @@
 ```
 
 ### "OK":
-The purpose of this OK is the same as 200 OK in HTTP:
-```
-{
-  "command": "response",
-  "response_class": <"ERROR" or "OK">
-}
-```
+HTTP 200 OK response
 
 ### "Allow charging" from Server to Charger:
+Topic: `ttm4115/g11/chargers/<charger-id>`
 ```
 {
   "command": "allow_charging",
@@ -46,7 +43,7 @@ The purpose of this OK is the same as 200 OK in HTTP:
 ```
 
 ### "Car is charged" from Charger to Server:
-_Could be HTTP later_
+HTTP, COMMING SOON
 ```
 {
   "command": "car_charged",
@@ -55,23 +52,18 @@ _Could be HTTP later_
 }
 ```
 
-### "Car is charged" from Charger to Server:
-_Same as last one_
-```
-{
-  "command": "car_charged",
-  "car_id": <id of car>,
-  "charger_id": <id of charger>
-}
-```
+### "Car is charged" from Server to App:
+Might be unneccessary, when the charger tells the server it is finished and the user updates its UI, the user will know.
 
 ### "Station available" Charger to Server:
+HTTP REQUEST, COMMMING SOON
 ```
 {
   "command": "charger_available"
 }
 ```
 
+The rest will be HTTP, updating soon
 ## sd Overview
 ### "req_overview_page" App to Server:
 _Could be HTTP later_
