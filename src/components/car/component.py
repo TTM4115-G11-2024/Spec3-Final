@@ -167,7 +167,7 @@ MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
 
 # TODO: choose proper topics for communication
-MQTT_TOPIC = "charger_percent"
+MQTT_TOPIC = ["ttm4115/g11/cars/", "ttm4115/g11/chargers/"]
 
 
 class CarBattery:
@@ -176,11 +176,14 @@ class CarBattery:
         self.charger_connected = False
         self.wanted_perc = perc
         self.car_ID = carID
+        self.chargerID = 10 #TODO: how does the car know the chargerID to which it is connected
 
     def charger_plugged(self):
         self.charger_connected = True
         print(self.stm.driver.print_status())
-        self.mqtt_client.publish(MQTT_TOPIC, self.car_ID)  
+        self.mqtt_client.publish(MQTT_TOPIC[1] + str(self.chargerID), "car" + str(self.car_ID) + "connected")  
+        #car sends to charger confirmation that it has been connected (the message is NOT received in MQTT)
+        print("send " + MQTT_TOPIC[1] + str(self.chargerID))
         #car sends ID to charger so that it can check wheter it is allow to charge or not
         print("Car connected")
 
@@ -191,15 +194,14 @@ class CarBattery:
 
     def send_update(self):
         print("send update")
-        self.mqtt_client.publish(MQTT_TOPIC, "b" + self.battery_percentage)  
+        self.mqtt_client.publish(MQTT_TOPIC[0] + str(self.car_ID), "b" + str(self.battery_percentage))  
         #car sends to charger how much battery it has left, it has the format bXX
         print(self.battery_percentage)
         print(self.stm.driver.print_status())
 
     def charged_compound_transition(self):
         percentage = self.wanted_perc
-        if self.battery_percentage == percentage:
-        #if on_message = 
+        if self.battery_percentage == percentage: 
             print("Charging completed!")
             print(self.stm.driver.print_status())
             return 'idle'
@@ -213,7 +215,7 @@ class CarBattery:
             print(self.stm.driver.print_status())
             return 'charging'
 
-battery = CarBattery(90, "9700DFZ")
+battery = CarBattery(90, "AB12345")
 
 #initial transition
 initial_to_charging = {
@@ -281,9 +283,10 @@ class MQTT_Client_1:
         self.client.on_message = self.on_message
         print("Connecting to {}:{}".format(MQTT_BROKER, MQTT_PORT))
         self.client.connect(MQTT_BROKER, MQTT_PORT)
-        
-        self.client.subscribe("charger_percent")
-
+        #for topic in MQTT_TOPIC:
+            #self.client.subscribe(topic)
+        self.client.subscribe(MQTT_TOPIC[0])
+        self.client.subscribe(MQTT_TOPIC[1])
 
        
 #create the State Machine
