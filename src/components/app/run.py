@@ -33,9 +33,13 @@ class App(object):
         self.app.addButton("Charging", self.charging)
         self.app.addButton("Reservations", self.reservations)
         self.app.addButton("My page", self.mp)
+        self.app.addButton("Close", self.close_program)
         self.app.stopSubWindow()
         self.app.hide()
         self.app.showSubWindow("Main_Window")
+
+    def close_program(self):
+        self.app.stop()
         
     def overview(self):    
         self.app.startSubWindow("Overview_Window", modal=True)
