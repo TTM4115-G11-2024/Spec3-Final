@@ -7,7 +7,8 @@ Username: g11
 Password: seveneleven
 
 - SSH should be activated and use Password above to authenticate.
-- To connect to it use Mobile hotspot on your phone. Currently only Sindre's network "Sid" is available.
+- To connect to it use Mobile hotspot on your phone.
+- Currently only Sindre's network "Sid" is available, you find this under available WiFi networks.
 ## Accessing the project:
 Write this in the terminal:
 ```bash
