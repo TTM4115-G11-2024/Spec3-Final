@@ -182,3 +182,22 @@ driver.add_machine(stm)
 # Start  MQTT client and the state machine driver
 mqtt_client_charger1.start()
 driver.start()
+
+
+'''{
+  "command": "start_charging",
+  "car_id": "car123",
+  "battery_target": "80"
+}
+
+
+{
+  "command": "battery_percentage",
+  "battery_percentage": "70",
+}
+
+{
+  "command": "battery_percentage",
+  "car_id": "car123",
+  "battery_percentage": "80"
+}'''
