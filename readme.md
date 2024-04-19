@@ -52,7 +52,7 @@ The attribute `component-name`can be one of the following:
 ## Currently available lighting modes:
 1) Red X for Error state. Instance: ErrorHandler()
 2) TBD...
-## How to do it
+## How to use the different SenseHat lighting modes in your code.
 * Create an instance of the class in sensehat.py
 * Code has the following format: (see test_sensehat.py for examples)
 ```
