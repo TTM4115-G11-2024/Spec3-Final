@@ -49,8 +49,12 @@ The attribute `component-name`can be one of the following:
 * `server`
 
 # Using SenseHat to light up display
+## Currently available lighting modes:
+1) Red X for Error state.
+2) TBD...
+## How to do it
 * Create an instance of the class in sensehat.py
-* Run the following code
+* Code has the following format: (see test_sensehat.py for examples)
 ```
 instance = Instance()
 
@@ -64,4 +68,3 @@ time.sleep(2)
 instance.stop()
 
 ```
-* Example can be seen in test_sensehat.py.
