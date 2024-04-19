@@ -50,7 +50,7 @@ The attribute `component-name`can be one of the following:
 
 # Using SenseHat to light up display
 ## Currently available lighting modes:
-1) Red X for Error state.
+1) Red X for Error state. Instance: ErrorHandler()
 2) TBD...
 ## How to do it
 * Create an instance of the class in sensehat.py
