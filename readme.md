@@ -10,8 +10,8 @@ Password: seveneleven
 - To connect to it use Mobile hotspot on your phone.
 - Currently only Sindre's network "Sid" is available, you find this under available WiFi networks.
 - ### The wifi information:
-- * WIFI: Sid
-- * PASSWORD: 1234567890
+  * WIFI name: Sid
+  * password: 1234567890
 ## Accessing the project:
 Write this in the terminal:
 ```bash
