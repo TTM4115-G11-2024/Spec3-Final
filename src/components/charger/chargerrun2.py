@@ -50,7 +50,7 @@ class Charger:
 
     def hardware_failure(self):
         print("Hardware failure detected. Shutting down.")
-    # Do we need a def for send_to_specific_charger?
+    # Do we need a def for send_to_specific_charger, or is this solved with charger id?
 
 
 # The MQTT Client for the Charger
@@ -60,12 +60,15 @@ class MQTTClientCharger:
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.charger = charger
+        #TOPIC
         self.charger_topic = f"ttm4115/g11/chargers/{self.charger.charger_id}"
         print(self.charger_topic)
 
+    #Initial connected message
     def on_connect(self, client, userdata, flags, rc):
         print(f"Connected to MQTT Broker with charger_id {self.charger.charger_id}")
 
+    #Battery percentage 
     def on_message(self, client, userdata, msg):
         data = json.loads(msg.payload)
         battery_percentage = data.get("battery_percentage")
@@ -73,6 +76,7 @@ class MQTTClientCharger:
         print(command)
         print(battery_percentage)
 
+    #Connection establishment
     def start(self):
         print(f"Connecting to {MQTT_BROKER}:{MQTT_PORT}")
         self.client.connect(MQTT_BROKER, MQTT_PORT)
