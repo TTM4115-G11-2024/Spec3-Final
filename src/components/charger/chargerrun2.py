@@ -2,7 +2,8 @@ import logging
 import json
 import paho.mqtt.client as mqtt
 from stmpy import Machine, Driver
-import sensehat as SH
+
+# import sensehat as SH
 
 
 # Configure the MQTT settings
