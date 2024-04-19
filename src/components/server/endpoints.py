@@ -64,12 +64,18 @@ def activate_charger(activate_charger: schemas.ActivateCharger, charger_id: int,
         raise HTTPException(status_code=400, detail="Charger currently is unavailable")
     
     if db_charger.is_reservable:
-        can_charge = False
-        for r in db_car.reservations:
-            if r.charger_id == charger_id and utils.is_now_in_range(r.start_time, r.end_time):
-                can_charge = True
+        if activate_charger.date_now is None:
+            can_charge = False
+            for r in db_car.reservations:
+                if r.charger_id == charger_id and utils.is_now_in_range(r.start_time, r.end_time):
+                    can_charge = True
+        else:
+            can_charge = False
+            for r in db_car.reservations:
+                if r.charger_id == charger_id and utils.is_datetime_in_range(activate_charger.date_now, r.start_time, r.end_time):
+                    can_charge = True
         if not can_charge:
-            return HTTPException(status_code=400, detail="The car has no reservation for the given charger at this time.")
+            raise HTTPException(status_code=400, detail="The car has no reservation for the given charger at this time.")
 
         # check if specified car can charge at charger
         #raise HTTPException(status_code=400, detail="Charging for reservable chargers not implemented yet.")

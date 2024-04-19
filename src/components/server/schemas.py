@@ -61,6 +61,7 @@ class Charger(ChargerBase):
 class ActivateCharger(BaseModel):
     car_id: str
     target_percentage: int
+    date_now: Optional[datetime] # field used for debugging, TODO: remove it later.
 
 
 class ActivateChargerReturn(BaseModel):
