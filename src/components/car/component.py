@@ -173,9 +173,7 @@ MQTT_TOPIC = ["ttm4115/g11/cars/", "ttm4115/g11/chargers/"]
 
 class CarBattery:
     def __init__(self, perc, carID):
-        self.battery_percentage = (
-            88  # random.randrange(10, 30)  # actual battery of the car
-        )
+        self.battery_percentage = random.randrange(10, 30)  # actual battery of the car
         self.charger_connected = False
         self.wanted_perc = perc
         self.car_ID = carID
@@ -252,7 +250,7 @@ class MQTT_Client_1:
         print("on_connect(): {}".format(mqtt.connack_string(rc)))
 
     def on_message(self, msg):
-        if msg == "connected":
+        if msg.payload.decode("utf-8") == "connected":
             self.charger_plugged
         else:
             self.charger_unplugged
