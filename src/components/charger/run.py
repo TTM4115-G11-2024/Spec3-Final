@@ -1,4 +1,4 @@
-import time
+'''import time
 
 import ipywidgets as widgets
 import paho.mqtt.client as mqtt
@@ -325,3 +325,4 @@ driver = Driver()
 driver.add_machine(charger_machine)
 driver.start(max_transitions=12)
 driver.stop()
+'''
