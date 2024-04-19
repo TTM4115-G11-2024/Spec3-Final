@@ -9,6 +9,7 @@ import sensehat as SH
 MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
 MQTT_TOPIC = "charger_percent"
+# error_handler = SH.ErrorHandler()
 
 
 # State machine logic for the Charger
@@ -61,11 +62,11 @@ class Charger:
 
     def error_occur(self):
         self.error = True
-        print("An error occurred, charging not available")
+        # error_handler.start()
 
     def error_resolved(self):
         self.error = False
-        print("Error resolved, charger available")
+        # error_handler.stop()
 
     def hardware_failure(self):
         print("Hardware failure detected. Shutting down.")
