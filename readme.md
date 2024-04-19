@@ -47,3 +47,21 @@ The attribute `component-name`can be one of the following:
 * `charger`
 * `app`
 * `server`
+
+# Using SenseHat to light up display
+* Create an instance of the class in sensehat.py
+* Run the following code
+```
+instance = Instance()
+
+# Start error
+instance.start()
+
+# Do other tasks...
+time.sleep(2)
+
+# Stop error
+instance.stop()
+
+```
+* Example can be seen in test_sensehat.py.
