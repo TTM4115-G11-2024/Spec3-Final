@@ -11,13 +11,15 @@ MQTT_TOPIC = "charger_percent"
 
 # State machine logic for the Charger
 class Charger:
-    def __init__(self, charger_id):
+    def __init__(self, charger_id, target_battery_percentage):
         self.charger_id = charger_id
         self.battery_percentage = 0
+        self.target_battery_percentage = 100
         self.car_connected = False #Indicates if car is connected
         self.is_activated = False #Indicates if charger is activated
         self.is_reserved = False #Indicates if charger is reserved
         self.reserved_by = None #ID of user who reserved charger?
+        self.target_battery_percentage = target_battery_percentage
 
     def on_battery_update(self, battery_percentage):
         self.battery_percentage = battery_percentage
@@ -106,7 +108,7 @@ class MQTTClientCharger:
 logging.basicConfig(level=logging.INFO)
 
 # Charger instance and a corresponding MQTT client
-charger1 = Charger(charger_id='001')
+charger1 = Charger(charger_id='001', target_battery_percentage=80)
 mqtt_client_charger1 = MQTTClientCharger(charger1)
 
 # Initial transition
