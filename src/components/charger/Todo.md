@@ -1,6 +1,6 @@
 # Here is the list of TODO:
 
-## 19/04
+## 19/04 - Sindre
 * Created: a general Display class
 * Takes: state as input (these are SenseHat states, not official stm)
 * Added: "error" state
