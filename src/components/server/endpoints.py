@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException
 import crud
 from mqtt import MQTTClient
 import utils
+import models
 
 router = APIRouter()
 
@@ -62,12 +63,17 @@ def activate_charger(activate_charger: schemas.ActivateCharger, charger_id: int,
     if not db_charger.is_available:
         raise HTTPException(status_code=400, detail="Charger currently is unavailable")
     
-    if not db_charger.is_reservable:
-        car_id = activate_charger.car_id
+    if db_charger.is_reservable:
+        can_charge = False
+        for r in db_car.reservations:
+            if r.charger_id == charger_id and utils.is_now_in_range(r.start_time, r.end_time):
+                can_charge = True
+        if not can_charge:
+            return HTTPException(status_code=400, detail="The car has no reservation for the given charger at this time.")
+
         # check if specified car can charge at charger
-        raise HTTPException(status_code=400, detail="Charging for reservable chargers not implemented yet.")
-    else:
-        crud.update_charger(db, charger_id, schemas.ChargerUpdate(is_available=False, is_reservable=None))
+        #raise HTTPException(status_code=400, detail="Charging for reservable chargers not implemented yet.")
+    crud.update_charger(db, charger_id, schemas.ChargerUpdate(is_available=False, is_reservable=None))
 
     # inform charger and car to start charging process
     mqtt_client.send_start_charging_to_car(charger_id, activate_charger.car_id)
@@ -117,7 +123,7 @@ def create_reservation(reservation: schemas.ReservationCreate, db: Session = Dep
     if db_car is None:
         raise HTTPException(status_code=400, detail="Car of car_id does not exist")
     
-    db_charger = crud.get_charger(db, reservation.charger_id)
+    db_charger: models.Charger = crud.get_charger(db, reservation.charger_id)
     if db_charger is None:
         raise HTTPException(status_code=404, detail="Charger of charger_id does not exist")
     
@@ -133,9 +139,15 @@ def create_reservation(reservation: schemas.ReservationCreate, db: Session = Dep
     
     
     if not (utils.is_valid_time(reservation.start_time) and utils.is_valid_time(reservation.end_time)):
-        raise HTTPException(status_code=400, detail="The start time or end time is not XX:30 or XX:00") 
+        raise HTTPException(status_code=400, detail="The start time or end time is not HH:30 or HH:00") 
 
     if not utils.is_30_minutes(reservation.start_time, reservation.end_time):
         raise HTTPException(status_code=400, detail="Time slot is not exactly 30 minutes long.")
+    
+    
+    # check if charger is already booked
+    for r in db_charger.reservations:
+        if r.start_time == reservation.start_time and r.end_time == reservation.end_time:
+            raise HTTPException(status_code=400, detail="Charger is already booked for the specified timeslot.")
 
     return crud.create_reservation(db, reservation)

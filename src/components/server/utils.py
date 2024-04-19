@@ -3,7 +3,13 @@ from datetime import datetime, timedelta
 
 
 def is_valid_time(d: datetime):
-    return d.minute == 0 or d.minute == 30
+    if d.minute != 0 and d.minute != 30:
+        return False
+    if d.second != 0:
+        return False
+    if d.microsecond != 0:
+        return False
+    return True
 
 
 def is_30_minutes(start: datetime, end: datetime):
@@ -14,3 +20,7 @@ def is_date_aware(d: datetime):
 
 def is_date_passed(d: datetime):
     return datetime.now() > d
+
+def is_now_in_range(start: datetime, end: datetime):
+    now = datetime.now()
+    return now >= start and now < end
