@@ -14,11 +14,12 @@ CHARGER_TOPIC = "ttm4115/g11/chargers"
 
 
 class BatteryLogic:
-    def __init__(self, car_id, mqtt_client):
+    def __init__(self, car_id, component):
         self.car_id = car_id
-        self.mqtt_client: mqtt.Client = mqtt_client
         self.percentage = 10
         self.charger_id = None
+        self.component: BatteryComponent = component
+        self.mqtt_client = self.component.mqtt_client
 
         # Transitions
         transitions = [
@@ -59,7 +60,8 @@ class BatteryLogic:
 
     def effect_finish_charging(self):
         print("Charging has finished.")
-        self.driver.stop()
+        self.component.stm_driver.stop()
+        self.mqtt_client.disconnect()
         pass
 
 
@@ -74,7 +76,7 @@ class BatteryComponent:
         self.mqtt_client.loop_start()
 
         # stm definitions
-        self.battery = BatteryLogic(car_id, self.mqtt_client)
+        self.battery = BatteryLogic(car_id, self)
 
         # driver
         self.stm_driver = stmpy.Driver()
