@@ -21,46 +21,24 @@ class BatteryLogic:
         self.charger_id = None
 
         # Transitions
-        initial_to_idle = {
-            "source": "initial",
-            "target": "idle",
-        }
-
-        idle_to_charging = {
-            "source": "idle",
-            "target": "charging",
-            "trigger": "start_charging",
-            "effect": "effect_charging",
-        }
-
-        charging_to_charging = {
-            "source": "charging",
-            "target": "charging",
-            "trigger": "update_timer",
-            "effect": "effect_charging_update",
-        }
-
-        charging_to_idle = {
-            "source": "charging",
-            "target": "idle",
-            "trigger": "finish_charging",
-            "effect": "effect_finish_charging",
-        }
+        transitions = [
+            {"source": "initial", "target": "idle"},
+            {"source": "idle", "target": "charging", "trigger": "start_charging", "effect": "effect_charging"},
+            {"source": "charging", "target": "charging", "trigger": "update_timer", "effect": "effect_charging_update"},
+            {"source": "charging", "target": "idle", "trigger": "finish_charging", "effect": "effect_finish_charging"}
+        ]
 
         # States
-        charging = {"name": "charging", "entry": "start_timer('update_timer', 500)"}
+        states = [
+            {"name": "charging", "entry": "start_timer('update_timer', 500)"}
+        ]
 
         # State machine
         self.stm = stmpy.Machine(
-            name=car_id,
-            transitions=[
-                initial_to_idle,
-                idle_to_charging,
-                charging_to_charging,
-                charging_to_idle,
-            ],
-            states=[charging],
-            obj=self,
+            name=car_id, 
+            transitions=transitions, 
+            states=states,
+            obj=self
         )
 
     def init_stm(self):
@@ -88,9 +66,7 @@ class BatteryLogic:
 class BatteryComponent:
     def __init__(self, car_id):
         # mqtt definitions
-        self.mqtt_client = mqtt.Client(
-            callback_api_version=mqtt.CallbackAPIVersion.VERSION1
-        )
+        self.mqtt_client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.on_message = self.on_message
         self.mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
@@ -126,4 +102,5 @@ class BatteryComponent:
         print("MQTT Connected")
 
 
+# Initialize component
 t = BatteryComponent("A100")
