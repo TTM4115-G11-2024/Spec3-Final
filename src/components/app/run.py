@@ -1,12 +1,14 @@
 from appJar import gui
 from datetime import datetime, timedelta
+import requests, json
 
 
 class App(object):
     def __init__(self):
-        self.car_id = None
-        self.chosen_station = None
-        self.chosen_percentage = None
+        self.car_id: str
+        self.chosen_station: int
+        self.chosen_percentage: int
+        self.url = "http://127.0.0.1:8000/"
 
         self.app = gui()
         self.run()
@@ -18,12 +20,25 @@ class App(object):
         self.app.addButton("Confirm ID", self.insert_CarID)
         #return "Hello from mobile-app"
 
-    def insert_CarID(self, title):
-        print('Button with title "{}" pressed!'.format(title))
-        ID = self.app.getEntry('Insert Car ID')
-        self.car_id = ID
-        print('And the current text field shows "{}".'.format(ID))
-        if ID:
+    def insert_CarID(self):
+        self.car_id  = self.app.getEntry('Insert Car ID')
+      
+        if self.car_id:
+            car_url = self.url + "cars/"
+
+            self.params = {
+                         "id": str(self.car_id)}
+        
+            r = requests.post(url=car_url, data=json.dumps(self.params))
+    
+            # Check if the request was successful (status code 200)
+            if r.status_code == 200:
+                # Extracting response text
+                resp = r.json()
+                print("Response is:%s" % resp)
+            else:
+                # Print error message if the request was not successful
+                print("Error:", r.text)
             self.app.startSubWindow("Main_Window", modal=True)
             self.main_page()
 
@@ -65,11 +80,9 @@ class App(object):
         self.app.addLabel("title_ch", 'Charging page')
 
         self.app.addLabelEntry('Insert Station ID')
-        self.app.setEntry('Insert Station ID', '#')
+        self.app.setEntry('Insert Station ID', '')
         self.app.addLabelEntry('Insert Desired Charge')
         self.app.setEntry('Insert Desired Charge', '100%')
-        self.chosen_station = self.app.getEntry('Insert Station ID')
-        self.chosen_percentage = self.app.getEntry('Insert Desired Charge')
         self.app.addButton("Confirm charging", self.start_charging)
 
         self.app.stopSubWindow()
@@ -80,7 +93,26 @@ class App(object):
         return "Hello"
     
     def start_charging(self):
-        return "Hello"
+        self.chosen_station  = self.app.getEntry('Insert Station ID')
+        self.chosen_percentage = self.app.getEntry('Insert Desired Charge')
+        chosen_percentage_int = int(self.chosen_percentage.rstrip('%'))
+        charging_url = self.url + "chargers/"+str(self.chosen_station)+"/activate/"
+        self.params = {
+                        "car_id": str(self.car_id),
+                        "target_percentage": chosen_percentage_int}
+        
+        print(self.params)
+        
+        r = requests.post(url=charging_url, data=json.dumps(self.params))
+    
+        # Check if the request was successful (status code 200)
+        if r.status_code == 200:
+            # Extracting response text
+            resp = r.json()
+            print("Response is:%s" % resp)
+        else:
+            # Print error message if the request was not successful
+            print("Error:", r.text)
     
     def reservations(self):    
         self.app.startSubWindow("Reserve_Window", modal=True)

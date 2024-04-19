@@ -11,21 +11,28 @@ MQTT_TOPIC = "charger_percent"
 
 # State machine logic for the Charger
 class Charger:
-    def __init__(self, charger_id):
+    def __init__(self, charger_id, target_battery_percentage):
         self.charger_id = charger_id
         self.battery_percentage = 0
-        self.car_connected = False
+        self.target_battery_percentage = 100
+        self.car_connected = False #Indicates if car is connected
+        self.is_activated = False #Indicates if charger is activated
+        self.is_reserved = False #Indicates if charger is reserved
+        self.reserved_by = None #ID of user who reserved charger?
+        self.target_battery_percentage = target_battery_percentage
 
     def on_battery_update(self, battery_percentage):
         self.battery_percentage = battery_percentage
         print(f"Received battery update: {self.battery_percentage}%")
-        # Logic to handle the battery update
 
-    def is_reserved_and_correct_user(self):
-        return True
-
-    def charger_nozzle_detected(self):
-        self.charger_nozzle_detected = True
+        # Battery level reached
+        if self.battery_percentage >= self.target_battery_percentage:
+            self.stm.process("battery_level_reached")
+            self.stop_charging()
+            print("Charging stopped, battery level reached")
+            
+    def charger_nozzle_connected(self):
+        self.charger_nozzle_connected = True
         print("Charger plugged to car.")
 
     def charger_nozzle_disconnected(self):
@@ -33,23 +40,26 @@ class Charger:
         print("Charger unplugged from car.")
 
     def start_charging(self):
-        print("Start charging.")
-        # Logic to start charging the car
+        if self.car_connected and self.is_activated:
+            self.is_activated = True
+            print("Start charging.")
+            # Logic to start charging the car
 
-    def battery_level_reached(self):
-        print("Stop charging, battery level reached.")
-        # Logic to stop charging the car for the set timeslot?
+    def stop_charging(self):
+        self.is_activated = False
+        print("Charging stopped")
 
     def error_occur(self):
         self.error = True
-        print("An error occurred.")
+        print("An error occurred, charging not available")
 
     def error_resolved(self):
         self.error = False
-        print("Error resolved.")
+        print("Error resolved, charger available")
 
     def hardware_failure(self):
         print("Hardware failure detected. Shutting down.")
+
     # Do we need a def for send_to_specific_charger, or is this solved with charger id?
 
 
@@ -71,10 +81,21 @@ class MQTTClientCharger:
     #Battery percentage 
     def on_message(self, client, userdata, msg):
         data = json.loads(msg.payload)
+
+        #Battery percentage 
         battery_percentage = data.get("battery_percentage")
+        print(battery_percentage)
+
+        #Command
         command = data.get("command")   
         print(command)
-        print(battery_percentage)
+
+        #Charging
+        if command == "start_charging":
+            self.charger.start_charging()
+        elif command == "stop_charging":
+            self.charger.stop_charging()        
+
 
     #Connection establishment
     def start(self):
@@ -83,12 +104,11 @@ class MQTTClientCharger:
         self.client.loop_start()
         self.client.subscribe(self.charger_topic)
 
-
-# Setup logging
+# Logging
 logging.basicConfig(level=logging.INFO)
 
 # Charger instance and a corresponding MQTT client
-charger1 = Charger(charger_id='001')
+charger1 = Charger(charger_id='001', target_battery_percentage=80)
 mqtt_client_charger1 = MQTTClientCharger(charger1)
 
 # Initial transition

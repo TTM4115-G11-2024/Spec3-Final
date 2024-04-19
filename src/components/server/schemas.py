@@ -62,6 +62,10 @@ class ActivateCharger(BaseModel):
     car_id: str
     target_percentage: int
 
+
+class ActivateChargerReturn(BaseModel):
+    max_charging_time: datetime
+
 # Charger Station
 class ChargingStation(BaseModel):
     id: int
