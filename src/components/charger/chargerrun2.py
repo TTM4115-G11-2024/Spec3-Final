@@ -20,14 +20,15 @@ class Charger:
         self.is_reserved = False #Indicates if charger is reserved
         self.reserved_by = None #ID of user who reserved charger?
         self.target_battery_percentage = target_battery_percentage
+        self.car_id = None  # Initi car_id 
 
     def on_battery_update(self, battery_percentage):
-        self.battery_percentage = battery_percentage
+        self.battery_percentage = int(battery_percentage)
         print(f"Received battery update: {self.battery_percentage}%")
 
-        # Battery level reached
+    # Check if battery level reached
         if self.battery_percentage >= self.target_battery_percentage:
-            self.stm.process("battery_level_reached")
+            self.stm.send('battery_level_reached')
             self.stop_charging()
             print("Charging stopped, battery level reached")
             
@@ -37,17 +38,25 @@ class Charger:
 
     def charger_nozzle_disconnected(self):
         self.charger_nozzle_disconnected = False
+        self.stop_charging()
         print("Charger unplugged from car.")
 
-    def start_charging(self):
+    def start_charging(self, car_id, battery_target):
+        self.car_id = car_id
+        self.target_battery_percentage = int(battery_target)
+
+
         if self.car_connected and self.is_activated:
             self.is_activated = True
-            print("Start charging.")
+            print(f"Start charging the car {car_id} to {battery_target}")
             # Logic to start charging the car
 
     def stop_charging(self):
-        self.is_activated = False
-        print("Charging stopped")
+        if self.is_activated:
+            self.is_activated = False
+            car_id = self.car_id if self.car_id else 'unknown'  # Fallback to 'unknown'
+            print(f"Charging stopped for the car {car_id}")
+            self.car_id = None  # Reset the car_id
 
     def error_occur(self):
         self.error = True
@@ -82,19 +91,41 @@ class MQTTClientCharger:
     def on_message(self, client, userdata, msg):
         data = json.loads(msg.payload)
 
-        #Battery percentage 
+        '''#Battery percentage 
         battery_percentage = data.get("battery_percentage")
         print(battery_percentage)
+        '''
 
-        #Command
+        #Printing command just to see what is sent
         command = data.get("command")   
         print(command)
 
-        #Charging
+        #Handles car id assuming car_id should match the car currently being charged
+        car_id = data.get("car_id")
+        if self.charger.car_id and car_id != self.charger.car_id:
+            print(f"Ignoring update for car {car_id} as it does not match the current car {self.charger.car_id}, include car_id in the command")
+            return
+        
+        #Start charging and battery target
         if command == "start_charging":
-            self.charger.start_charging()
+            #Converting to int
+            battery_target = int(data.get("battery_target"))
+            self.charger.start_charging(car_id, battery_target)
+            print(f"Charging started for car {car_id} with target {battery_target}%")
+
+        #Handle stop_charging
         elif command == "stop_charging":
-            self.charger.stop_charging()        
+            self.charger.stop_charging()    
+            print(f"Charging stopped for car {self.charger.car_id}")
+
+        #Handle battery percentage update
+        elif command == "battery_percentage":
+            #Converting to int
+            battery_percentage = int(data.get("battery_percentage"))
+            # Update the battery percentage of the charger
+            self.charger.on_battery_update(battery_percentage)
+            print(f"Battery update: {battery_percentage}% for car {self.charger.car_id}")
+
 
 
     #Connection establishment
