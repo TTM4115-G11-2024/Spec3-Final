@@ -215,12 +215,12 @@ class CarBattery:
         if self.battery_percentage == percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
-            self.charger_unplugged()
+            self.final_charger_unplugged()
             return "idle"
         elif self.battery_percentage > percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
-            self.charger_unplugged()
+            self.final_charger_unplugged()
             return "idle"
         else:
             self.battery_percentage += 1
@@ -231,6 +231,7 @@ class CarBattery:
     def final_charger_unplugged(self):
         print(self.stm.driver.print_status())
         print("unplugging charger")
+        self.send_update()
         driver.stop()
 
 
@@ -251,9 +252,9 @@ class MQTT_Client_1:
 
     def on_message(self, msg):
         if msg.payload.decode("utf-8") == "connected":
-            self.charger_plugged
+            self.charger_plugged()
         else:
-            self.charger_unplugged
+            self.charger_unplugged()
 
     def send_battery_level(self, msg):
         self.client.publish(self.battery_percentage, msg.payload)
