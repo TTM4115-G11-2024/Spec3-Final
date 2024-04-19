@@ -10,8 +10,10 @@ Password: seveneleven
 - To connect to it use Mobile hotspot on your phone.
 ## Accessing the project:
 Write this in the terminal:
-- ssh g11@raspberrypi
-- cd Projects/Spec3-Final
+```bash
+ssh g11@raspberrypi.local
+cd Projects/Spec3-Final
+```
   
 
 
