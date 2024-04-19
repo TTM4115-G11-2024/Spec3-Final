@@ -173,9 +173,7 @@ MQTT_TOPIC = ["ttm4115/g11/cars/", "ttm4115/g11/chargers/"]
 
 class CarBattery:
     def __init__(self, perc, carID):
-        self.battery_percentage = (
-            88  # random.randrange(10, 30)  # actual battery of the car
-        )
+        self.battery_percentage = random.randrange(10, 30)  # actual battery of the car
         self.charger_connected = False
         self.wanted_perc = perc
         self.car_ID = carID
@@ -217,12 +215,12 @@ class CarBattery:
         if self.battery_percentage == percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
-            self.charger_unplugged()
+            self.final_charger_unplugged()
             return "idle"
         elif self.battery_percentage > percentage:
             print("Charging completed!")
             print(self.stm.driver.print_status())
-            self.charger_unplugged()
+            self.final_charger_unplugged()
             return "idle"
         else:
             self.battery_percentage += 1
@@ -233,6 +231,7 @@ class CarBattery:
     def final_charger_unplugged(self):
         print(self.stm.driver.print_status())
         print("unplugging charger")
+        self.send_update()
         driver.stop()
 
 
@@ -252,10 +251,10 @@ class MQTT_Client_1:
         print("on_connect(): {}".format(mqtt.connack_string(rc)))
 
     def on_message(self, msg):
-        if msg == "connected":
-            self.charger_plugged
+        if msg.payload.decode("utf-8") == "connected":
+            self.charger_plugged()
         else:
-            self.charger_unplugged
+            self.charger_unplugged()
 
     def send_battery_level(self, msg):
         self.client.publish(self.battery_percentage, msg.payload)
