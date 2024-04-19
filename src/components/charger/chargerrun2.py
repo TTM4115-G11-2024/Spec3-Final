@@ -2,6 +2,7 @@ import logging
 import json
 import paho.mqtt.client as mqtt
 from stmpy import Machine, Driver
+import sensehat as SH
 
 
 # Configure the MQTT settings
@@ -153,10 +154,10 @@ transitions = [
     initial_transition,  # Initial transition
     {"trigger": "init", "source": "initial", "target": "idle"},
     {
-        "trigger": "Charger_Nozzle_detected",
+        "trigger": "charger_Nozzle_detected",
         "source": "idle",
         "target": "connected",
-        "effect": "charger_nozzle_detected",
+        # "effect": "charger_nozzle_detected",
     },
     {
         "trigger": "Charger_Nozzle_disconnected",
@@ -242,4 +243,5 @@ driver.start()
   "command": "battery_percentage",
   "car_id": "car123",
   "battery_percentage": "80"
-}"""
+}
+"""

@@ -30,22 +30,21 @@ class BatteryLogic:
             "source": "idle",
             "target": "charging",
             "trigger": "start_charging",
-            "effect": "effect_charging"
-
+            "effect": "effect_charging",
         }
 
         charging_to_charging = {
             "source": "charging",
             "target": "charging",
             "trigger": "update_timer",
-            "effect": "effect_charging_update"
+            "effect": "effect_charging_update",
         }
 
         charging_to_idle = {
             "source": "charging",
             "target": "idle",
             "trigger": "finish_charging",
-            "effect": "effect_finish_charging"
+            "effect": "effect_finish_charging",
         }
 
         # States
@@ -53,13 +52,17 @@ class BatteryLogic:
 
         # State machine
         self.stm = stmpy.Machine(
-            name=car_id, 
-            transitions=[initial_to_idle, idle_to_charging, charging_to_charging, charging_to_idle], 
+            name=car_id,
+            transitions=[
+                initial_to_idle,
+                idle_to_charging,
+                charging_to_charging,
+                charging_to_idle,
+            ],
             states=[charging],
-            obj=self
+            obj=self,
         )
 
-    
     def init_stm(self):
         pass
 
@@ -71,22 +74,23 @@ class BatteryLogic:
         self.percentage += 2
         print(f"Current battery percentage: {self.percentage}")
         topic = f"{CHARGER_TOPIC}/{self.charger_id}"
-        payload = {
-            "command": "battery_percentage",
-            "percentage": self.percentage
-        }
+        payload = {"command": "battery_percentage", "percentage": self.percentage}
         payload = json.dumps(payload)
 
         self.mqtt_client.publish(topic, payload)
 
     def effect_finish_charging(self):
         print("Charging has finished.")
+        self.driver.stop()
         pass
+
 
 class BatteryComponent:
     def __init__(self, car_id):
         # mqtt definitions
-        self.mqtt_client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
+        self.mqtt_client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION1
+        )
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.on_message = self.on_message
         self.mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
@@ -103,11 +107,10 @@ class BatteryComponent:
 
         # other variables
         self.charger_id = None
-    
 
     def on_message(self, client, userdata, msg):
-        msg = json.loads(msg.payload) # now a dict
-        
+        msg = json.loads(msg.payload)  # now a dict
+
         command = msg.get("command")
 
         # TODO determine what to do
@@ -119,8 +122,8 @@ class BatteryComponent:
         elif command == "stop_charging":
             self.stm_driver.send("finish_charging", self.battery.car_id)
 
-
     def on_connect(self, client, userdata, flags, rc):
         print("MQTT Connected")
+
 
 t = BatteryComponent("A100")
