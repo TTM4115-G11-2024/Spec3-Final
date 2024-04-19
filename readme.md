@@ -58,13 +58,13 @@ The attribute `component-name`can be one of the following:
 ```
 instance = Instance()
 
-# Start error
+# Start instance: Add this where you want to enable the SenseHat to display the desired output.
 instance.start()
 
 # Do other tasks...
 time.sleep(2)
 
-# Stop error
+# Stop instance: This function must be called when you want to stop displaying SenseHat display started by instance.start().
 instance.stop()
 
 ```
