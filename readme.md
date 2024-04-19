@@ -13,7 +13,7 @@ Password: seveneleven
 Write this in the terminal:
 ```bash
 ssh g11@raspberrypi.local
-cd Projects/Spec3-Final
+cd /home/g11/Projects/Spec3-Final/
 ```
   
 
