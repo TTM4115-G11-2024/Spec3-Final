@@ -4,16 +4,19 @@ import time
 # This file shows how to enable the SenseHat display.
 
 # ErrorHandler
-## Create an instance of ErrorHandler
-error_handler = SH.ErrorHandler()
+def test_error_handler():
+    # Create an instance of ErrorHandler
+    error_handler = SH.ErrorHandler()
 
-# Start error
-error_handler.start()
+    # Start error
+    error_handler.start()
+    
+    # Do other tasks...
+    time.sleep(2)
+    
+    # Stop error
+    error_handler.stop()
 
-# Do other tasks...
-time.sleep(2)
 
-# Stop error
-error_handler.stop()
-## End ErrorHandler
 
+test_error_handler()
