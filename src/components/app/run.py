@@ -1,6 +1,6 @@
 from appJar import gui
 from datetime import datetime, timedelta
-import requests, json
+import requests, json, pytz  
 
 
 class App(object):
@@ -18,7 +18,6 @@ class App(object):
         self.app.addLabelEntry('Insert Car ID')
         self.app.setEntry('Insert Car ID', '#')
         self.app.addButton("Confirm ID", self.insert_CarID)
-        #return "Hello from mobile-app"
 
     def insert_CarID(self):
         self.car_id  = self.app.getEntry('Insert Car ID')
@@ -59,12 +58,12 @@ class App(object):
     def overview(self):    
         self.app.startSubWindow("Overview_Window", modal=True)
         self.app.addLabel("title_ow", 'Overview page')
-        buttons = ["Station 1", "Station 2", "Station 3", "Station 4",
-           "Station 5", "Station 6", "Station 7", "Station 8"]
-        row = 1
+        self.app.addLabel("charger_info", "Select Charger Info:")
+        buttons = ["1", "2", "3", "4", "5", "6", "7", "8"]
+        row = 2
         col = 0
         for button_name in buttons:
-            self.app.addButton(button_name, self.press, row, col) #remember to change press
+            self.app.addButton(button_name, lambda selected_station_info=button_name: self.selected_station(selected_station_info), row, col) 
             col += 1
             if col == 4:
                 col = 0
@@ -73,7 +72,27 @@ class App(object):
         self.app.stopSubWindow()
         self.app.hide()
         self.app.showSubWindow("Overview_Window")
-        return "Hello"
+        
+    def selected_station (self, selected_station_info):
+        url_this_charger = self.url + "chargers/"+selected_station_info
+        r = requests.get(url_this_charger)
+        if r.status_code == 200:
+            parsed = r.json()
+            self.app.startSubWindow("Station_Window", modal=True)
+            self.app.addLabel("title_station", "Station Information")
+            self.app.addLabel("label_station_id", "Station ID:" + str(parsed["id"]))
+            if parsed["is_available"]:
+                self.app.addLabel("avaialble_now", "Avaialable Now")
+            else:
+                self.app.addLabel("unavaialble_now", "Currently Unavailable")
+           
+            # Stop the subwindow
+            self.app.stopSubWindow()
+
+            # Show the subwindow
+            self.app.showSubWindow("Station_Window")
+
+
 
     def charging(self):   
         self.app.startSubWindow("Charging_Window", modal=True) 
@@ -117,13 +136,15 @@ class App(object):
     def reservations(self):    
         self.app.startSubWindow("Reserve_Window", modal=True)
         self.app.addLabel("title_re", 'Reservation page')
+        self.app.addLabelEntry('Insert Desired Charger')
+        self.app.setEntry('Insert Desired Charger', '')
         self.app.addLabel("text_select_slot", 'Select 30 min slot:')
         upcoming_times = self.get_next_half_hour_times()
 
-        row = 2
+        row = 3
         col = 0
         for button_name in upcoming_times:
-            self.app.addButton(button_name, self.press, row, col) #remember to change press
+            self.app.addButton(button_name, lambda selected_time=button_name: self.reserve(selected_time), row, col)
             col += 1
             if col == 2:
                 col = 0
@@ -132,14 +153,36 @@ class App(object):
         self.app.stopSubWindow()
         self.app.hide()
         self.app.showSubWindow("Reserve_Window")
-        return "Hello"
 
     def mp():    
         return "Hello"
     
-    def press():
-        return "Hello"
+    def reserve(self, selected_time):
+        charger = self.app.getEntry('Insert Desired Charger') 
+        #NOT NAIVE  
+        current_time = datetime.now(pytz.utc)
 
+        selected_hour, selected_minute = map(int, selected_time.split(':'))
+        start_time = current_time.replace(hour=selected_hour, minute=selected_minute, second=0, microsecond=0)
+        end_time = start_time + timedelta(minutes=30)
+
+         # Prepare request parameters
+        params = {
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "car_id": str(self.car_id),
+            "charger_id": charger
+        }
+
+        # Make POST request to /reservations/
+        p_url = "http://127.0.0.1:8000/reservations/"
+        response = requests.post(p_url, json=params)
+
+        if response.status_code == 200:
+            print("Reservation successfully made.")
+        else:
+            print("Failed to make reservation. Error:", response.text)
+   
     def get_next_half_hour_times(self):
         current_time = datetime.now()
         current_minute = current_time.minute
