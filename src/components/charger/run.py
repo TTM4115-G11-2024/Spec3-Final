@@ -15,6 +15,9 @@ def run():
 
     ChargerComponent(charger_id)
 
+def run_from_python(charger_id):
+    ChargerComponent(charger_id)
+
 
 if __name__ == "__main__":
     run()

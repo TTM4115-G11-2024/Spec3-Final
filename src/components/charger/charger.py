@@ -134,6 +134,8 @@ class ChargerComponent:
 
         command = msg.get("command")
 
+        print(f"charger {self.charger.charger_id} got a message.")
+
         if command == "start_charging":
             battery_target = msg.get("battery_target")
             car_id = msg.get("car_id")

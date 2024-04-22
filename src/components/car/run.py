@@ -15,6 +15,9 @@ def run():
 
     BatteryComponent(car_id)
 
+def run_from_python(car_id):
+    BatteryComponent(car_id)
+
 
 if __name__ == "__main__":
     run()

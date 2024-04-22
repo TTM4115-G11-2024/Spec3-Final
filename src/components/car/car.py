@@ -94,9 +94,10 @@ class BatteryComponent:
             charger_id = msg.get("charger_id")
             self.battery.charger_id = charger_id
 
-            self.stm_driver.send("start_charging", self.battery.car_id)
+            self.battery.stm.send("start_charging")
         elif command == "stop_charging":
-            self.stm_driver.send("finish_charging", self.battery.car_id)
+            self.battery.percentage = 10
+            self.battery.stm.send("finish_charging")
 
     def on_connect(self, client, userdata, flags, rc):
         print("MQTT Connected")
