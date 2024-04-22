@@ -15,11 +15,11 @@ chunk = 1024
 
 def play_sound(input):
     if input == 1:
-        filename = filename
+        filename_used = filename
     else:
-        filename = filename2
+        filename_used = filename2
     # Open the sound file
-    wf = wave.open(filename, "rb")
+    wf = wave.open(filename_used, "rb")
 
     # Create an interface to PortAudio
     p = pyaudio.PyAudio()
@@ -44,3 +44,7 @@ def play_sound(input):
     # Close and terminate the stream
     stream.close()
     p.terminate()
+
+
+play_sound(2)
+play_sound(1)
