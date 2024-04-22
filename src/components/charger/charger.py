@@ -1,8 +1,8 @@
-import logging
 import json
 import paho.mqtt.client as mqtt
 import stmpy
 import audio
+import requests
 
 # import sensehat as SH
 
@@ -79,6 +79,7 @@ class ChargerLogic:
 
     def on_battery_charged(self):
         print(f"Charging stopped for the car {self.car_id}")
+        self.make_charger_available()
         self.car_id = None
         self.battery_target = None
         self.current_car_battery = None
@@ -95,6 +96,11 @@ class ChargerLogic:
 
     def on_hardware_failure(self):
         print("Hardware failure detected. Shutting down.")
+
+    
+    def make_charger_available(self):
+        url = f"http://localhost:8000/chargers/{self.charger_id}/deactivate"
+        requests.post(url=url)
 
 
 
@@ -137,8 +143,8 @@ class ChargerComponent:
 
         # Handle stop_charging
         elif command == "stop_charging":
-            self.charger.stop_charging()
             print(f"Charging stopped for car {self.charger.car_id}")
+            self.charger.stm.send("battery_charged")
         
         elif command == "battery_update":
             percentage = msg.get("percentage")
