@@ -106,4 +106,3 @@ class BatteryComponent:
 
 
 # Initialize component
-t = BatteryComponent("A100")

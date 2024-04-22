@@ -141,5 +141,3 @@ class ChargerComponent:
             percentage = msg.get("percentage")
             self.charger.current_car_battery = percentage
             self.charger.stm.send("battery_update")
-
-ChargerComponent(1)
