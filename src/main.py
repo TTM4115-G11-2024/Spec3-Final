@@ -1,7 +1,7 @@
 import sys
 import paho.mqtt.client as mqtt
-import components.car.component_v2 as car
-import components.charger.chargerrun2 as charger
+import components.car.car as car
+import components.charger.charger as charger
 import components.app.run as app
 import components.server.run as server
 import components.server.mqtt as mqttServer
