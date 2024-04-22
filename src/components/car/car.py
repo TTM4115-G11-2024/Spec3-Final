@@ -61,9 +61,6 @@ class BatteryLogic:
 
     def effect_finish_charging(self):
         print("Charging has finished.")
-        self.component.stm_driver.stop()
-        self.mqtt_client.disconnect()
-        pass
 
 
 class BatteryComponent:
