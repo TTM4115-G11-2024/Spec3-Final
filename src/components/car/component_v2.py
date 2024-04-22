@@ -50,10 +50,11 @@ class BatteryLogic:
         pass
 
     def effect_charging_update(self):
-        self.percentage += 2
+        if self.percentage < 99: # prevent going over 100% because its not possible
+            self.percentage += 2
         print(f"Current battery percentage: {self.percentage}")
         topic = f"{CHARGER_TOPIC}/{self.charger_id}"
-        payload = {"command": "battery_percentage", "percentage": self.percentage}
+        payload = {"command": "battery_update", "percentage": self.percentage}
         payload = json.dumps(payload)
 
         self.mqtt_client.publish(topic, payload)
