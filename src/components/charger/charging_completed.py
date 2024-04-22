@@ -1,7 +1,11 @@
 import pyaudio
 import wave
 
-filename = "charging_completed.wav"
+import os
+
+# Determine the directory of the script
+dir_path = os.path.dirname(os.path.realpath(__file__))
+filename = os.path.join(dir_path, "charging_completed.wav")
 
 # Set chunk size of 1024 samples per data frame
 chunk = 1024
@@ -25,7 +29,7 @@ stream = p.open(
 data = wf.readframes(chunk)
 
 # Play the sound by writing the audio data to the stream
-while data != "":
+while len(data) > 0:
     stream.write(data)
     data = wf.readframes(chunk)
 
