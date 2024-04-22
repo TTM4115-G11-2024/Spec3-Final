@@ -16,7 +16,7 @@ class App(object):
 
     def run(self):
         self.app.addLabelEntry('Insert Car ID')
-        self.app.setEntry('Insert Car ID', '#')
+        self.app.setEntry('Insert Car ID', '')
         self.app.addButton("Confirm ID", self.insert_CarID)
 
     def insert_CarID(self):
@@ -46,7 +46,6 @@ class App(object):
         self.app.addButton("Overview", self.overview)
         self.app.addButton("Charging", self.charging)
         self.app.addButton("Reservations", self.reservations)
-        self.app.addButton("My page", self.mp)
         self.app.addButton("Close", self.close_program)
         self.app.stopSubWindow()
         self.app.hide()
@@ -81,10 +80,13 @@ class App(object):
             self.app.startSubWindow("Station_Window", modal=True)
             self.app.addLabel("title_station", "Station Information")
             self.app.addLabel("label_station_id", "Station ID:" + str(parsed["id"]))
+            start_times = [datetime.fromisoformat(reservation['start_time']).strftime('%H:%M') for reservation in parsed["reservations"]]
             if parsed["is_available"]:
                 self.app.addLabel("avaialble_now", "Avaialable Now")
             else:
                 self.app.addLabel("unavaialble_now", "Currently Unavailable")
+
+            self.app.addLabel("reservations_currently", "Reserved at " + ' '.join(start_times))
            
             # Stop the subwindow
             self.app.stopSubWindow()
@@ -128,9 +130,12 @@ class App(object):
             # Extracting response text
             resp = r.json()
             print("Response is:%s" % resp)
+            self.app.infoBox("Success_Charge", "You have started charging!")
+
         else:
             # Print error message if the request was not successful
             print("Error:", r.text)
+            self.app.errorBox("Error_Charger", "Failed to charge. Error: {}".format(r.text))
     
     def reservations(self):    
         self.app.startSubWindow("Reserve_Window", modal=True)
@@ -152,9 +157,6 @@ class App(object):
         self.app.stopSubWindow()
         self.app.hide()
         self.app.showSubWindow("Reserve_Window")
-
-    def mp():    
-        return "Hello"
     
     def reserve(self, selected_time):
         charger = self.app.getEntry('Insert Desired Charger') 
@@ -179,9 +181,9 @@ class App(object):
         response = requests.post(p_url, json=params)
 
         if response.status_code == 200:
-            print("Reservation successfully made.")
+            self.app.infoBox("Success", "Reservation successfully made. Please remember to show up to your reservation!")
         else:
-            print("Failed to make reservation. Error:", response.text)
+            self.app.errorBox("Error", "Failed to make reservation. Error: {}".format(response.text))
    
     def get_next_half_hour_times(self):
         current_time = datetime.now()
