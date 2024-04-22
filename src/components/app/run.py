@@ -1,6 +1,6 @@
 from appJar import gui
 from datetime import datetime, timedelta
-import requests, json, pytz  
+import requests, json 
 
 
 class App(object):
@@ -92,8 +92,6 @@ class App(object):
             # Show the subwindow
             self.app.showSubWindow("Station_Window")
 
-
-
     def charging(self):   
         self.app.startSubWindow("Charging_Window", modal=True) 
         self.app.addLabel("title_ch", 'Charging page')
@@ -118,7 +116,8 @@ class App(object):
         charging_url = self.url + "chargers/"+str(self.chosen_station)+"/activate/"
         self.params = {
                         "car_id": str(self.car_id),
-                        "target_percentage": chosen_percentage_int}
+                        "target_percentage": chosen_percentage_int,
+                        "date_now": None}
         
         print(self.params)
         
@@ -159,12 +158,12 @@ class App(object):
     
     def reserve(self, selected_time):
         charger = self.app.getEntry('Insert Desired Charger') 
-        #NOT NAIVE  
-        current_time = datetime.now(pytz.utc)
+        current_time = datetime.now()
 
         selected_hour, selected_minute = map(int, selected_time.split(':'))
         start_time = current_time.replace(hour=selected_hour, minute=selected_minute, second=0, microsecond=0)
         end_time = start_time + timedelta(minutes=30)
+        print(start_time, end_time, selected_time)
 
          # Prepare request parameters
         params = {
@@ -174,6 +173,7 @@ class App(object):
             "charger_id": charger
         }
 
+        print(params)
         # Make POST request to /reservations/
         p_url = "http://127.0.0.1:8000/reservations/"
         response = requests.post(p_url, json=params)
