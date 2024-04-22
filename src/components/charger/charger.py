@@ -2,6 +2,7 @@ import logging
 import json
 import paho.mqtt.client as mqtt
 import stmpy
+import audio
 
 # import sensehat as SH
 
@@ -73,6 +74,7 @@ class ChargerLogic:
 
     def on_start_charging(self):
         print(f"Charging started for car {self.car_id} with target {self.battery_target}%")
+        audio.play_charging_started_sound()
 
 
     def on_battery_charged(self):
@@ -80,6 +82,7 @@ class ChargerLogic:
         self.car_id = None
         self.battery_target = None
         self.current_car_battery = None
+        audio.play_charging_completed_sound()
         
 
     def on_error_occur(self):

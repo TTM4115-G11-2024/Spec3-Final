@@ -5,21 +5,17 @@ import os
 
 # Determine the directory of the script
 dir_path = os.path.dirname(os.path.realpath(__file__))
-filename = os.path.join(dir_path, "charging_completed.wav")
-filename2 = os.path.join(dir_path, "charging_started.wav")
+charging_completed_file = os.path.join(dir_path, "audio_files/charging_completed.wav")
+charging_started_file = os.path.join(dir_path, "audio_files/charging_started.wav")
 
 
 # Set chunk size of 1024 samples per data frame
 chunk = 1024
 
 
-def play_sound(input):
-    if input == 1:
-        filename_used = filename
-    else:
-        filename_used = filename2
+def play_sound(filename):
     # Open the sound file
-    wf = wave.open(filename_used, "rb")
+    wf = wave.open(filename, "rb")
 
     # Create an interface to PortAudio
     p = pyaudio.PyAudio()
@@ -46,5 +42,9 @@ def play_sound(input):
     p.terminate()
 
 
-play_sound(2)
-play_sound(1)
+def play_charging_completed_sound():
+    play_sound(charging_completed_file)
+
+
+def play_charging_started_sound():
+    play_sound(charging_started_file)
