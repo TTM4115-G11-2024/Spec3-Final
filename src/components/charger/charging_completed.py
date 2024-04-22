@@ -6,33 +6,41 @@ import os
 # Determine the directory of the script
 dir_path = os.path.dirname(os.path.realpath(__file__))
 filename = os.path.join(dir_path, "charging_completed.wav")
+filename2 = os.path.join(dir_path, "charging_started.wav")
+
 
 # Set chunk size of 1024 samples per data frame
 chunk = 1024
 
-# Open the sound file
-wf = wave.open(filename, "rb")
 
-# Create an interface to PortAudio
-p = pyaudio.PyAudio()
+def play_sound(input):
+    if input == 1:
+        filename = filename
+    else:
+        filename = filename2
+    # Open the sound file
+    wf = wave.open(filename, "rb")
 
-# Open a .Stream object to write the WAV file to
-# 'output = True' indicates that the sound will be played rather than recorded
-stream = p.open(
-    format=p.get_format_from_width(wf.getsampwidth()),
-    channels=wf.getnchannels(),
-    rate=wf.getframerate(),
-    output=True,
-)
+    # Create an interface to PortAudio
+    p = pyaudio.PyAudio()
 
-# Read data in chunks
-data = wf.readframes(chunk)
+    # Open a .Stream object to write the WAV file to
+    # 'output = True' indicates that the sound will be played rather than recorded
+    stream = p.open(
+        format=p.get_format_from_width(wf.getsampwidth()),
+        channels=wf.getnchannels(),
+        rate=wf.getframerate(),
+        output=True,
+    )
 
-# Play the sound by writing the audio data to the stream
-while len(data) > 0:
-    stream.write(data)
+    # Read data in chunks
     data = wf.readframes(chunk)
 
-# Close and terminate the stream
-stream.close()
-p.terminate()
+    # Play the sound by writing the audio data to the stream
+    while len(data) > 0:
+        stream.write(data)
+        data = wf.readframes(chunk)
+
+    # Close and terminate the stream
+    stream.close()
+    p.terminate()
