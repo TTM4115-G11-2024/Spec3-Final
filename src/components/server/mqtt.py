@@ -18,15 +18,13 @@ class MQTTClient:
         return
 
     def send_start_charging_to_car(self, charger_id: int, car_id: str):
+        topic = f"ttm4115/g11/cars/{car_id}"
         payload = {
             "command": "start_charging",
             "charger_id": charger_id,
         }
         payload = json.dumps(payload)
-
-        print(f"ttm4115/g11/cars/{car_id}")
-        self.client.publish(f"ttm4115/g11/cars/{car_id}", payload)
-        return
+        self.client.publish(topic, payload)
     
     def send_start_charging_to_charger(self, charger_id: int, car_id: str, battery_target: int):
         payload = {
@@ -44,6 +42,7 @@ class MQTTClient:
         self.client.on_message = self.on_message
         print("Connecting to {}:{}".format(MQTT_BROKER, MQTT_PORT))
         self.client.connect(MQTT_BROKER, MQTT_PORT)
+        self.client.loop_start()
     
 
     def stop(self):
