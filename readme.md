@@ -66,12 +66,12 @@ The attribute `component-name`can be one of the following:
 ```
 import sensehat as SH
 
-display = SH.Display(start_state)
+display = SH.Display(start_state) # By default use start_state = "init"
 display.start()
 ```
 2) Add the state of what to display on SenseHat in your code:
 ```
-display.state = your_state
+display.state = your_state # Remember to add this everytime you want to change the display to another one on the list above.
 ```
 3) Give SenseHat information about the battery:
 ```
