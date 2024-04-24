@@ -7,16 +7,21 @@ from sense_hat import SenseHat
 red = (255, 0, 0)
 green = (0, 255, 0)
 orange = (255, 165, 0)
+yellow = (255, 255, 0)
 none = (0, 0, 0)
+white = (255, 255, 255)
 
 
 
 class Display:
-    def __init__(self, state, battery_level):
+    def __init__(self, state):
         self.sense = SenseHat()
         self.running = False
-        self.state = state.lower()
-        self.battery = battery_level    
+        self.state = state
+        self.battery = None
+        self.battery_cap = None   
+        self.wait = 1
+        self.sense.clear(50, 50, 50)
         
     def start(self):
         self.running = True
@@ -25,8 +30,15 @@ class Display:
 
     def stop(self):
         self.running = False
-        if self.thread:
-            self.thread.join()
+        self.sense.clear()
+        if self.display_thread:
+            self.display_thread.join()
+
+    def set_battery_level(self, battery_level):
+        self.battery = battery_level
+    
+    def set_state(self, state):
+        self.state = state
 
     def display_two_digits(self, a_number, color):
 
@@ -81,53 +93,66 @@ class Display:
 
     def _loop(self):
         while self.running:
-            self.sense.clear()
-
-            if self.state == "error":
+            if self.state == "init":
+                self.init()
+            elif self.state == "error":
                 self.error()
             elif self.state == "available":
-                
+                self.available()
             elif self.state == "unavailable":
-
+                self.unavailable()
             elif self.state == "battery status":
-
+                self.battery_status()
             elif self.state == "authenticating":
-
-            
-                
+                self.authenticating()
+            elif self.state == "clear":
+                self.sense.clear()
             else:
-                print("ERROR: Invalid state input.")
-            
+                break   
+        
+    
+    def init(self):
+        #message = "Sensehat is Starting up..."
+        #print(message)
+        #self.sense.show_message(message, text_colour=white, back_colour=none)
+        return
 
+    
     def error(self):
         for y in range(8):
             for x in range(8):
                 if (x == y) or (x + y == 7):  # Diagonal conditions for 'X'
                     self.sense.set_pixel(x, y, red[0], red[1], red[2])
                 else:
-                    self.sense.set_pixel(x, y, none[0], none[1], none[2])
-        time.sleep(0.5)
-        self.sense.clear()
-        time.sleep(0.5)      
+                    self.sense.set_pixel(x, y, none[0], none[1], none[2])  
+        time.sleep(self.wait) # Keep it stable for some time, so the user see it has been in this state.
 
+    
     def available(self):
         self.sense.clear(green)
-        time.sleep(0.5)
+        time.sleep(1) # Keep it stable for some time, so the user see it has been in this state.
 
+    
     def unavailable(self):
         self.sense.clear(orange)
-        time.sleep(0.5)
+        time.sleep(self.wait) # Keep it stable for some time, so the user see it has been in this state.
 
-    def battery_status(self, battery_cap, battery_lvl):
-        self.battery_cap = battery_cap
-        self.battery_lvl = battery_lvl
-
+    def battery_status(self):
+        if self.battery < self.battery_cap:
+            self.display_two_digits(self.battery, white)
+            # Allow time for the display to show the correct value.
+            time.sleep(0.5)
+        else:
+            self.sense.clear(yellow)
+            time.sleep(1)
+            message = str(self.battery_cap) + "%"
+            self.sense.show_message(message, text_colour=yellow, back_colour=none)
+            self.sense.clear(yellow)
+            time.sleep(1)
+            message = "Done"
+            self.sense.show_message(message, text_colour=yellow, back_colour=none)
         
-
-        message = str(self.battery) + "%"
-        self.sense.show_message(message, text_colour=none, back_colour=none)
-        time.sleep(0.5)
-
+      
     def authenticating(self):
-        self.sense.show_message("A", text_colour=none, back_colour=none)
-        time.sleep(0.5)
+        self.sense.show_message("Authenticating...", text_colour=orange, back_colour=none)
+        time.sleep(self.wait) # Keep it stable for some time, so the user see it has been in this state. 
