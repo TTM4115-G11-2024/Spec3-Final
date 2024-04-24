@@ -75,10 +75,9 @@ display.state = your_state
 ```
 3) Give SenseHat information about the battery:
 ```
+display.battery_cap = your_battery_cap
 # Considering you are in charging state when this happens:
 display.state = "battery status"
-
-display.battery_cap = your_battery_cap
 # Foreach time you read battery status from MQTT update the battery status on SenseHat:
 display.battery = updated_battery_status
 ```
