@@ -52,25 +52,37 @@ The attribute `component-name`can be one of the following:
 * `server`
 
 # Using SenseHat to light up display
-## Currently available lighting modes:
-1) Red X for Error state
-```
-display.state = "error"
-```
-4) TBD...
+## Currently available lighting modes (state: description):
+1) init: gray background
+2) available: green background
+3) unavailable: orange background
+4) authenticating: "Authenticating..." shown from right to left.
+5) battery status: Two digit number shown in white. When reached battery cap: Blink yellow -> (Batery_cap)% -> Blink yellow -> "Done..." from right to left.
+6) error: Red X
+
 ## How to use the different SenseHat lighting modes in your code.
-* Create an instance of the class in sensehat.py
-* Code has the following format: (see test_sensehat.py for examples)
+- Best advice: See test_sensehat.py
+1) When charger program starts up, add the following:
 ```
-instance = Instance()
+import sensehat as SH
 
-# Start instance: Add this where you want to enable the SenseHat to display the desired output.
-instance.start()
+display = SH.Display(start_state)
+display.start()
+```
+2) Add the state of what to display on SenseHat in your code:
+```
+display.state = your_state
+```
+3) Give SenseHat information about the battery:
+```
+# Considering you are in charging state when this happens:
+display.state = "battery status"
 
-# Do other tasks...
-time.sleep(2)
-
-# Stop instance: This function must be called when you want to stop displaying SenseHat display started by instance.start().
-instance.stop()
-
+display.battery_cap = your_battery_cap
+# Foreach time you read battery status from MQTT update the battery status on SenseHat:
+display.battery = updated_battery_status
+```
+4) If there is an exit or terminate state/function for your program, add the function that terminates SenseHat too:
+```
+display.stop()
 ```
