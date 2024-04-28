@@ -74,6 +74,16 @@ class ChargerLogic:
 
     def on_start_charging(self):
         print(f"Charging started for car {self.car_id} with target {self.battery_target}%")
+
+        # send start charging to car
+        topic = f"{CAR_TOPIC}/{self.car_id}"
+        payload = {
+            "command": "start_charging",
+            "charger_id": self.charger_id,
+        }
+        payload = json.dumps(payload)
+        self.component.mqtt_client.publish(topic, payload)
+
         audio.play_charging_started_sound()
 
 
