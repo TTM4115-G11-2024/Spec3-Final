@@ -63,6 +63,9 @@ def activate_charger(activate_charger: schemas.ActivateCharger, charger_id: int,
     if not db_charger.is_available:
         raise HTTPException(status_code=400, detail="Charger currently is unavailable")
     
+    if activate_charger.target_percentage > 100 or activate_charger.target_percentage <= 0:
+        raise HTTPException(status_code=400, detail="Target percentage is not between 0 and 100.")
+    
     if db_charger.is_reservable:
         if activate_charger.date_now is None:
             can_charge = False
