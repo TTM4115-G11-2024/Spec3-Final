@@ -141,6 +141,9 @@ def create_reservation(reservation: schemas.ReservationCreate, db: Session = Dep
     db_charger: models.Charger = crud.get_charger(db, reservation.charger_id)
     if db_charger is None:
         raise HTTPException(status_code=404, detail="Charger of charger_id does not exist")
+
+    if not db_charger.is_reservable:
+        raise HTTPException(status_code=404, detail="Charger of charger_id is not reservable")
     
     if utils.is_date_aware(reservation.start_time) or utils.is_date_aware(reservation.end_time):
         # Format of date should be: YYYY-MM-DDTHH:MM (ISO)
