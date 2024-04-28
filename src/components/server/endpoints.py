@@ -82,7 +82,6 @@ def activate_charger(activate_charger: schemas.ActivateCharger, charger_id: int,
     crud.update_charger(db, charger_id, schemas.ChargerUpdate(is_available=False, is_reservable=None))
 
     # inform charger and car to start charging process
-    #mqtt_client.send_start_charging_to_car(charger_id, activate_charger.car_id)
     mqtt_client.send_start_charging_to_charger(charger_id, activate_charger.car_id, activate_charger.target_percentage)
 
 

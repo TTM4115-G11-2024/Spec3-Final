@@ -1,9 +1,9 @@
 import paho.mqtt.client as mqtt
 import json
-import time
 
 MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
+CHARGER_TOPIC = "ttm4115/g11/chargers"
 
 class MQTTClient:
     def __init__(self):
@@ -17,14 +17,6 @@ class MQTTClient:
     def on_message(self, msg):
         return
 
-    def send_start_charging_to_car(self, charger_id: int, car_id: str):
-        topic = f"ttm4115/g11/cars/{car_id}"
-        payload = {
-            "command": "start_charging",
-            "charger_id": charger_id,
-        }
-        payload = json.dumps(payload)
-        self.client.publish(topic, payload)
     
     def send_start_charging_to_charger(self, charger_id: int, car_id: str, battery_target: int):
         payload = {
@@ -34,7 +26,7 @@ class MQTTClient:
         }
         payload = json.dumps(payload)
 
-        self.client.publish(f"ttm4115/g11/chargers/{charger_id}", payload)
+        self.client.publish(f"{CHARGER_TOPIC}/{charger_id}", payload)
 
 
     def start(self):
