@@ -3,6 +3,7 @@ from stmpy import Machine, Driver
 import paho.mqtt.client as mqtt
 import stmpy
 import json
+import logging
 
 # TODO: choose proper MQTT broker address
 MQTT_BROKER = "test.mosquitto.org"
@@ -12,6 +13,7 @@ MQTT_PORT = 1883
 CAR_TOPIC = "ttm4115/g11/cars"
 CHARGER_TOPIC = "ttm4115/g11/chargers"
 
+logger = logging.getLogger("car_logger")
 
 class BatteryLogic:
     def __init__(self, car_id, component):
@@ -46,21 +48,24 @@ class BatteryLogic:
         pass
 
     def effect_charging(self):
-        print("Charging has started.")
+        logger.debug("Car moved from state idle -> charging. Charging has started.")
         pass
 
     def effect_charging_update(self):
         if self.percentage < 99: # prevent going over 100% because its not possible
             self.percentage += 2
-        print(f"Current battery percentage: {self.percentage}")
+        logger.debug(f"Charging percentage updated to {self.percentage}.")
+
+        # Send battery percentage to charger
         topic = f"{CHARGER_TOPIC}/{self.charger_id}"
         payload = {"command": "battery_update", "percentage": self.percentage}
         payload = json.dumps(payload)
-
         self.mqtt_client.publish(topic, payload)
+        logger.debug(f"Sent battery update to topic '{topic}' with payload {payload}")
+
 
     def effect_finish_charging(self):
-        print("Charging has finished.")
+        logger.debug(f"Car moved from state charging -> idle. Charging has finished with battery_percentage={self.percentage}%")
 
 
 class BatteryComponent:
@@ -85,6 +90,7 @@ class BatteryComponent:
         self.charger_id = None
 
     def on_message(self, client, userdata, msg):
+        logger.debug(f"MQTT Client recieved a message in topic '{msg.topic}': {msg.payload}")
         msg = json.loads(msg.payload)  # now a dict
 
         command = msg.get("command")
@@ -96,11 +102,11 @@ class BatteryComponent:
 
             self.battery.stm.send("start_charging")
         elif command == "stop_charging":
-            self.battery.percentage = 10
+            #self.battery.percentage = 10
             self.battery.stm.send("finish_charging")
 
     def on_connect(self, client, userdata, flags, rc):
-        print("MQTT Connected")
-
-
-# Initialize component
+        if rc == 0:
+            logger.debug(f"Client connected to broker {MQTT_BROKER}:{MQTT_PORT}.")
+        else:
+            logger.debug(f"Broker {MQTT_BROKER}:{MQTT_PORT} refused connection")

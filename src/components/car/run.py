@@ -1,5 +1,18 @@
 from car import BatteryComponent
 import sys
+import logging
+
+
+def logger_init(level):
+    logger = logging.getLogger("car_logger")
+    logger.setLevel(level)
+    ch = logging.StreamHandler()
+    ch.setLevel(level)
+    formatter = logging.Formatter("[%(asctime)s][%(levelname)s]   %(message)s")
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+
 
 def get_car_id_arg():
     args = sys.argv
@@ -11,6 +24,7 @@ def get_car_id_arg():
     return car_id
 
 def run():
+    logger_init(logging.DEBUG)
     car_id = get_car_id_arg()
 
     BatteryComponent(car_id)
