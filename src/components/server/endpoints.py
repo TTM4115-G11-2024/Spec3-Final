@@ -66,26 +66,33 @@ def activate_charger(activate_charger: schemas.ActivateCharger, charger_id: int,
     if activate_charger.target_percentage > 100 or activate_charger.target_percentage <= 0:
         raise HTTPException(status_code=400, detail="Target percentage is not between 0 and 100.")
     
+    max_charging_time = 30 * 60 # 30 minutes in seconds
+
     if db_charger.is_reservable:
+        can_charge = False
+        reservation_end_time = None
         if activate_charger.date_now is None:
-            can_charge = False
             for r in db_car.reservations:
                 if r.charger_id == charger_id and utils.is_now_in_range(r.start_time, r.end_time):
                     can_charge = True
+                    reservation_end_time = r.end_time
+                    break
         else:
-            can_charge = False
             for r in db_car.reservations:
                 if r.charger_id == charger_id and utils.is_datetime_in_range(activate_charger.date_now, r.start_time, r.end_time):
                     can_charge = True
-        if not can_charge:
+                    reservation_end_time = r.end_time
+                    break
+
+        if can_charge:
+            max_charging_time = min(utils.get_seconds_until(reservation_end_time), 30 * 60)
+        else:
             raise HTTPException(status_code=400, detail="The car has no reservation for the given charger at this time.")
 
-        # check if specified car can charge at charger
-        #raise HTTPException(status_code=400, detail="Charging for reservable chargers not implemented yet.")
     crud.update_charger(db, charger_id, schemas.ChargerUpdate(is_available=False, is_reservable=None))
+    mqtt_client.send_start_charging_to_charger(charger_id, activate_charger.car_id, activate_charger.target_percentage, max_charging_time)
 
-    # inform charger and car to start charging process
-    mqtt_client.send_start_charging_to_charger(charger_id, activate_charger.car_id, activate_charger.target_percentage)
+    return schemas.ActivateChargerReturn(max_charging_time=max_charging_time)
 
 
 @router.post("/chargers/{charger_id}/deactivate/", status_code=200)

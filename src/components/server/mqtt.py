@@ -18,11 +18,12 @@ class MQTTClient:
         return
 
     
-    def send_start_charging_to_charger(self, charger_id: int, car_id: str, battery_target: int):
+    def send_start_charging_to_charger(self, charger_id: int, car_id: str, battery_target: int, max_charging_time: int):
         payload = {
             "command": "start_charging",
             "car_id": car_id,
             "battery_target": battery_target,
+            "max_charging_time": max_charging_time,
         }
         payload = json.dumps(payload)
 

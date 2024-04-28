@@ -65,7 +65,7 @@ class ActivateCharger(BaseModel):
 
 
 class ActivateChargerReturn(BaseModel):
-    max_charging_time: datetime
+    max_charging_time: int # max time to charge in seconds
 
 # Charger Station
 class ChargingStation(BaseModel):
