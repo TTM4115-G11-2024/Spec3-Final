@@ -14,8 +14,7 @@ CHARGER_TOPIC = "ttm4115/g11/chargers"
 CAR_TOPIC = "ttm4115/g11/cars"
 
 # Server settings
-SERVER_URL = "http://localhost"
-SERVER_PORT = 8000
+SERVER_URL = "http://localhost:8000"
 # error_handler = SH.ErrorHandler()
 
 
@@ -55,7 +54,7 @@ class ChargerLogic:
 
     def stm_init(self):
         self._deactivate_charger_in_server()
-        #self.stm.send("nozzle_connected") # for now nozzle is automatically connected
+        self.stm.send("nozzle_connected") # for now nozzle is automatically connected
 
     
     def on_battery_update(self):
@@ -125,7 +124,7 @@ class ChargerLogic:
         self._deactivate_charger_in_server()
     
     def _deactivate_charger_in_server(self):
-        url = f"{SERVER_URL}:{SERVER_PORT}/chargers/{self.charger_id}/deactivate/"
+        url = f"{SERVER_URL}/chargers/{self.charger_id}/deactivate/"
         requests.post(url=url)
 
 
