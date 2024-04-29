@@ -32,7 +32,7 @@ class ChargerLogic:
             {"source": "initial", "target": "idle", "effect": "stm_init"},
             {"trigger": "nozzle_connected", "source": "idle", "target": "connected", "effect": "on_nozzle_connected"},
             {"trigger": "nozzle_disconnected", "source": "connected", "target": "idle", "effect": "on_nozzle_disconnected"},
-            {"trigger": "start_charging", "source": "connected", "target": "charging", "effect": "on_start_charging"},
+            {"trigger": "start_charging", "source": "connected", "target": "charging", "effect": "stop_timer('charging_timer');on_start_charging"},
             #{"trigger": "start_charging", "source": "idle", "target": "idle", "effect": "on_attempt_start_charging"}
             {"trigger": "battery_charged", "source": "charging", "target": "connected","effect": "on_battery_charged"}, # should target be idle or connected?
             {"trigger": "charging_timer",  "source": "charging", "target": "connected", "effect": "on_battery_charged"}, # should target be idle or connected?
@@ -44,11 +44,7 @@ class ChargerLogic:
             {"trigger": "hw_failure", "source": "error", "target": None, "effect": "on_hardware_failure"}
         ]
 
-        states = [
-            {"name": "charging", "exit": "stop_timer('charging_timer')"}
-        ]
-
-        self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, states=states, obj=self)
+        self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, obj=self)
 
         # other variables
         self.car_id = None
@@ -88,6 +84,8 @@ class ChargerLogic:
 
     def on_start_charging(self):
         print(f"Charging started for car {self.car_id} with target {self.battery_target}%")
+        self.stm.start_timer("charging_timer", self.max_charging_time)
+        print(f"Started charging_timer with {self.max_charging_time/1000}s")
 
         # send start charging to car
         topic = f"{CAR_TOPIC}/{self.car_id}"
@@ -179,9 +177,11 @@ class ChargerComponent:
             max_charging_time = msg.get("max_charging_time")
             self.charger.battery_target = battery_target
             self.charger.car_id = car_id
-            self.charger.max_charging_time = max_charging_time
+            self.charger.max_charging_time = max_charging_time * 1000
+            
             self.charger.stm.send("start_charging")
-            self.charger.stm.start_timer("charging_timer", max_charging_time * 1000)
+            
+            
             print(f"max_charging_time: {max_charging_time}")
 
         # Handle stop_charging
