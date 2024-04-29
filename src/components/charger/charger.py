@@ -1,7 +1,7 @@
 import json
 import paho.mqtt.client as mqtt
 import stmpy
-import audio
+#import audio
 import requests
 import sensehat as SH
 import time
@@ -54,13 +54,12 @@ class ChargerLogic:
 
     def stm_init(self):
         self.display.state = "available"
-        self.display.battery_cap = self.battery_target
+        self.display.battery_cap = 0
 
         self._deactivate_charger_in_server()
         self.stm.send("nozzle_connected") # for now nozzle is automatically connected
     
     def on_battery_update(self):
-        self.display.state = "battery status"
         self.display.battery = self.current_car_battery
         # Check if battery level reached
         if self.current_car_battery >= self.battery_target:
@@ -68,6 +67,7 @@ class ChargerLogic:
             print(f"Received battery update: {self.current_car_battery}%. Charging stopped.")
         else:
             # display the charging percentage on sense hat
+            self.display.state = "battery status"
             print(f"Received battery update: {self.current_car_battery}%. Charging continues.")
             pass
 
@@ -83,6 +83,8 @@ class ChargerLogic:
 
 
     def on_start_charging(self):
+        self.display.battery_cap = self.battery_target
+
         print(f"Charging started for car {self.car_id} with target {self.battery_target}%")
         self.stm.start_timer("charging_timer", self.max_charging_time)
         print(f"Started charging_timer with {self.max_charging_time/1000}s")
@@ -96,12 +98,14 @@ class ChargerLogic:
         payload = json.dumps(payload)
         self.component.mqtt_client.publish(topic, payload)
 
-        audio.play_charging_started_sound()
+        #audio.play_charging_started_sound()
 
 
     def on_battery_charged(self):
         print(f"Charging stopped for the car {self.car_id}")
         
+        self.display.state = "battery charged"
+
         # send stop charging signal to car
         topic = f"{CAR_TOPIC}/{self.car_id}"
         payload = {"command": "stop_charging"}
@@ -110,15 +114,14 @@ class ChargerLogic:
 
         self.make_charger_available()
         self.car_id = None
-        self.battery_target = None
-        self.current_car_battery = None
-        audio.play_charging_completed_sound()
+        self.battery_target = 0
+        self.current_car_battery = 0
+        #audio.play_charging_completed_sound()
         
 
     def on_error_occur(self):
         self.display.state = "error"
         print("Error occurred")
-        # error_handler.start()
 
     def on_error_resolved(self):
         self.display.state = "available"

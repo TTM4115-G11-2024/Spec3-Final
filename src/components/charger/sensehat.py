@@ -15,20 +15,23 @@ white = (255, 255, 255)
 
 class Display:
     def __init__(self, state):
+        print("SenseHat being initialized.")
         self.sense = SenseHat()
         self.running = False
         self.state = state
-        self.battery = None
-        self.battery_cap = None   
+        self.battery = 0
+        self.battery_cap = 0   
         self.wait = 1
         self.sense.clear(50, 50, 50)
         
     def start(self):
+        print("SenseHat has started running.")
         self.running = True
         self.display_thread = threading.Thread(target=self._loop)
         self.display_thread.start()
 
     def stop(self):
+        print("SenseHat has stopped running.")
         self.running = False
         self.sense.clear()
         if self.display_thread:
@@ -103,6 +106,8 @@ class Display:
                 self.unavailable()
             elif self.state == "battery status":
                 self.battery_status()
+            elif self.state == "battery charged":
+                self.battery_charged()
             elif self.state == "authenticating":
                 self.authenticating()
             elif self.state == "clear":
@@ -137,21 +142,21 @@ class Display:
         self.sense.clear(orange)
         time.sleep(self.wait) # Keep it stable for some time, so the user see it has been in this state.
 
+    def battery_charged(self):
+        self.sense.clear(yellow)
+        time.sleep(1)
+        message = str(self.battery_cap) + "%"
+        self.sense.show_message(message, text_colour=yellow, back_colour=none)
+        self.sense.clear(yellow)
+        time.sleep(1)
+        message = "Done"
+        self.sense.show_message(message, text_colour=yellow, back_colour=none)
+
+
     def battery_status(self):
-        if self.battery < self.battery_cap:
-            self.display_two_digits(self.battery, white)
-            # Allow time for the display to show the correct value.
-            time.sleep(0.5)
-        else:
-            self.sense.clear(yellow)
-            time.sleep(1)
-            message = str(self.battery_cap) + "%"
-            self.sense.show_message(message, text_colour=yellow, back_colour=none)
-            self.sense.clear(yellow)
-            time.sleep(1)
-            message = "Done"
-            self.sense.show_message(message, text_colour=yellow, back_colour=none)
-        
+        self.display_two_digits(self.battery, white)
+        # Allow time for the display to show the correct value.
+        time.sleep(0.5)
       
     def authenticating(self):
         self.sense.show_message("Authenticating...", text_colour=orange, back_colour=none)
