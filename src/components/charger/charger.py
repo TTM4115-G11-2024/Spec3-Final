@@ -12,6 +12,10 @@ MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
 CHARGER_TOPIC = "ttm4115/g11/chargers"
 CAR_TOPIC = "ttm4115/g11/cars"
+
+# Server settings
+SERVER_URL = "http://localhost"
+SERVER_PORT = 8000
 # error_handler = SH.ErrorHandler()
 
 
@@ -26,7 +30,9 @@ class ChargerLogic:
             {"trigger": "nozzle_connected", "source": "idle", "target": "connected", "effect": "on_nozzle_connected"},
             {"trigger": "nozzle_disconnected", "source": "connected", "target": "idle", "effect": "on_nozzle_disconnected"},
             {"trigger": "start_charging", "source": "connected", "target": "charging", "effect": "on_start_charging"},
+            #{"trigger": "start_charging", "source": "idle", "target": "idle", "effect": "on_attempt_start_charging"}
             {"trigger": "battery_charged", "source": "charging", "target": "connected","effect": "on_battery_charged"}, # should target be idle or connected?
+            {"trigger": "charging_timer",  "source": "charging", "target": "connected", "effect": "on_battery_charged"}, # should target be idle or connected?
             {"trigger": "battery_update", "source": "charging", "target": "charging", "effect": "on_battery_update"},
             # Error transitions
             {"trigger": "error", "source": "charging", "target": "error","effect": "on_error_occur"},
@@ -35,27 +41,27 @@ class ChargerLogic:
             {"trigger": "hw_failure", "source": "error", "target": None, "effect": "on_hardware_failure"}
         ]
 
-        self.stm = stmpy.Machine(name=f"charger-{self.charger_id}", transitions=transitions, obj=self)
+        states = [
+            {"name": "charging", "exit": "stop_timer('charging_timer')"}
+        ]
+
+        self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, states=states, obj=self)
 
         # other variables
         self.car_id = None
         self.battery_target = None
         self.current_car_battery = None
+        self.max_charging_time = 60 * 30 * 1000
 
     def stm_init(self):
-        self.stm.send("nozzle_connected") # for now nozzle is automatically connected
+        self._deactivate_charger_in_server()
+        #self.stm.send("nozzle_connected") # for now nozzle is automatically connected
 
     
     def on_battery_update(self):
 
         # Check if battery level reached
         if self.current_car_battery >= self.battery_target:
-            # send charging stopped to car
-            topic = f"{CAR_TOPIC}/{self.car_id}"
-            payload = {"command": "stop_charging"}
-            payload = json.dumps(payload)
-            self.component.mqtt_client.publish(topic, payload)
-
             self.stm.send("battery_charged")
             print(f"Received battery update: {self.current_car_battery}%. Charging stopped.")
         else:
@@ -65,7 +71,7 @@ class ChargerLogic:
 
 
     def on_nozzle_connected(self):
-        print("Charger plugged to car.")
+        print("Charger plugged to car.")   
 
 
     def on_nozzle_disconnected(self):
@@ -89,6 +95,13 @@ class ChargerLogic:
 
     def on_battery_charged(self):
         print(f"Charging stopped for the car {self.car_id}")
+        
+        # send stop charging signal to car
+        topic = f"{CAR_TOPIC}/{self.car_id}"
+        payload = {"command": "stop_charging"}
+        payload = json.dumps(payload)
+        self.component.mqtt_client.publish(topic, payload)
+
         self.make_charger_available()
         self.car_id = None
         self.battery_target = None
@@ -109,7 +122,10 @@ class ChargerLogic:
 
     
     def make_charger_available(self):
-        url = f"http://localhost:8000/chargers/{self.charger_id}/deactivate"
+        self._deactivate_charger_in_server()
+    
+    def _deactivate_charger_in_server(self):
+        url = f"{SERVER_URL}:{SERVER_PORT}/chargers/{self.charger_id}/deactivate/"
         requests.post(url=url)
 
 
@@ -149,13 +165,16 @@ class ChargerComponent:
         if command == "start_charging":
             battery_target = msg.get("battery_target")
             car_id = msg.get("car_id")
+            max_charging_time = msg.get("max_charging_time")
             self.charger.battery_target = battery_target
             self.charger.car_id = car_id
+            self.charger.max_charging_time = max_charging_time
             self.charger.stm.send("start_charging")
+            self.charger.stm.start_timer("charging_timer", max_charging_time * 1000)
+            print(f"max_charging_time: {max_charging_time}")
 
         # Handle stop_charging
         elif command == "stop_charging":
-            print(f"Charging stopped for car {self.charger.car_id}")
             self.charger.stm.send("battery_charged")
         
         elif command == "battery_update":
