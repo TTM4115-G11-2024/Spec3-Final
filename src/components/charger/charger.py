@@ -3,8 +3,9 @@ import paho.mqtt.client as mqtt
 import stmpy
 import audio
 import requests
+import sensehat as SH
+import time
 
-# import sensehat as SH
 
 
 # Configure the MQTT settings
@@ -21,6 +22,9 @@ SERVER_URL = "http://localhost:8000"
 # State machine logic for the Charger
 class ChargerLogic:
     def __init__(self, charger_id, component):
+        self.display = SH.Display("init")
+        self.display.start()
+
         self.component : ChargerComponent = component
         self.charger_id : int = charger_id
 
@@ -53,12 +57,15 @@ class ChargerLogic:
         self.max_charging_time = 60 * 30 * 1000
 
     def stm_init(self):
+        self.display.state = "available"
+        self.display.battery_cap = self.battery_target
+
         self._deactivate_charger_in_server()
         self.stm.send("nozzle_connected") # for now nozzle is automatically connected
-
     
     def on_battery_update(self):
-
+        self.display.state = "battery status"
+        self.display.battery = self.current_car_battery
         # Check if battery level reached
         if self.current_car_battery >= self.battery_target:
             self.stm.send("battery_charged")
@@ -70,10 +77,12 @@ class ChargerLogic:
 
 
     def on_nozzle_connected(self):
+        self.display.state = "unavailable"
         print("Charger plugged to car.")   
 
 
     def on_nozzle_disconnected(self):
+        self.display.state = "available"
         print("Charger unplugged from car.")
 
 
@@ -109,14 +118,17 @@ class ChargerLogic:
         
 
     def on_error_occur(self):
+        self.display.state = "error"
         print("Error occurred")
         # error_handler.start()
 
     def on_error_resolved(self):
+        self.display.state = "available"
         print("Error resolved")
 
 
     def on_hardware_failure(self):
+        self.display.state = "error"
         print("Hardware failure detected. Shutting down.")
 
     
