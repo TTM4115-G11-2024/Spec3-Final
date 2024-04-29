@@ -72,27 +72,31 @@ class App(object):
         self.app.hide()
         self.app.showSubWindow("Overview_Window")
         
-    def selected_station (self, selected_station_info):
-        url_this_charger = self.url + "chargers/"+selected_station_info
+    def selected_station(self, selected_station_info):
+        url_this_charger = self.url + "chargers/" + selected_station_info
         r = requests.get(url_this_charger)
         if r.status_code == 200:
             parsed = r.json()
-            self.app.startSubWindow("Station_Window", modal=True)
+            # Generate a unique subwindow name incorporating the charger ID
+            subwindow_name = "Station_Window_" + selected_station_info
+            self.app.startSubWindow(subwindow_name, modal=True)
             self.app.addLabel("title_station", "Station Information")
             self.app.addLabel("label_station_id", "Station ID:" + str(parsed["id"]))
             start_times = [datetime.fromisoformat(reservation['start_time']).strftime('%H:%M') for reservation in parsed["reservations"]]
             if parsed["is_available"]:
-                self.app.addLabel("avaialble_now", "Avaialable Now")
+                self.app.addLabel("avaialble_now", "Available Now")
             else:
                 self.app.addLabel("unavaialble_now", "Currently Unavailable")
 
             self.app.addLabel("reservations_currently", "Reserved at " + ' '.join(start_times))
-           
+
             # Stop the subwindow
             self.app.stopSubWindow()
 
             # Show the subwindow
-            self.app.showSubWindow("Station_Window")
+            self.app.showSubWindow(subwindow_name)
+
+
 
     def charging(self):   
         self.app.startSubWindow("Charging_Window", modal=True) 
@@ -109,7 +113,6 @@ class App(object):
         self.app.showSubWindow("Charging_Window")
 
         #http://appjar.info/outputWidgets/#label
-        return "Hello"
     
     def start_charging(self):
         self.chosen_station  = self.app.getEntry('Insert Station ID')
