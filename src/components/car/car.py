@@ -26,9 +26,9 @@ class BatteryLogic:
         # Transitions
         transitions = [
             {"source": "initial", "target": "idle"},
-            {"source": "idle", "target": "charging", "trigger": "start_charging", "effect": "effect_charging"},
-            {"source": "charging", "target": "charging", "trigger": "update_timer", "effect": "effect_charging_update"},
-            {"source": "charging", "target": "idle", "trigger": "finish_charging", "effect": "effect_finish_charging"}
+            {"source": "idle", "target": "charging", "trigger": "start_charging", "effect": "on_charging"},
+            {"source": "charging", "target": "charging", "trigger": "update_timer", "effect": "on_charging_update"},
+            {"source": "charging", "target": "idle", "trigger": "finish_charging", "effect": "on_finish_charging"}
         ]
 
         # States
@@ -47,11 +47,11 @@ class BatteryLogic:
     def init_stm(self):
         pass
 
-    def effect_charging(self):
+    def on_charging(self):
         logger.debug("Car moved from state idle -> charging. Charging has started.")
         pass
 
-    def effect_charging_update(self):
+    def on_charging_update(self):
         if self.percentage < 99: # prevent going over 100% because its not possible
             self.percentage += 2
         logger.debug(f"Charging percentage updated to {self.percentage}.")
@@ -64,7 +64,7 @@ class BatteryLogic:
         logger.debug(f"Sent battery update to topic '{topic}' with payload {payload}")
 
 
-    def effect_finish_charging(self):
+    def on_finish_charging(self):
         logger.debug(f"Car moved from state charging -> idle. Charging has finished with battery_percentage={self.percentage}%")
 
 
