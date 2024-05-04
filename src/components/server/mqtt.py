@@ -15,7 +15,7 @@ class MQTTClient:
         print("on_connect(): {}".format(mqtt.connack_string(rc)))
 
     def on_message(self, msg):
-        return
+        return # Server does not subscribe to any topics
 
     
     def send_start_charging_to_charger(self, charger_id: int, car_id: str, battery_target: int, max_charging_time: int):
