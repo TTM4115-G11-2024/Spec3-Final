@@ -1,3 +1,58 @@
+# Introduction
+This project is done by Team 11 in the course TTM4115, the spring of 2024.
+
+For context on the repository it's important to have read our System Specification 3 (course delivery).
+
+# Running the Application
+## Installation
+### MacOS and Linux
+Execute the following commands from the root directory:
+```bash
+python3.12 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+```
+### Windows
+Execute the following commands from the root directory:
+```bash
+python3.12 -m venv env
+source .\venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Running
+First, activate the virtual environment with `source env/bin/activate` (Mac/Linux).
+
+Each component has slightly different ways of being started:
+
+### App
+```
+python src/components/app/run.py
+```
+
+### Car
+```
+python src/components/car/run.py <car_id>
+```
+The `car_id` can be any string, but remember the car needs to be registered in the server database for the component to work correctly.
+This is done through the App user interface when prompted for a Car ID.
+
+### Charger
+NB! This component is supposed to be ran on a Raspberry Pi with sense_hat.
+```
+python src/components/charger/run.py <charger_id>
+```
+The `charger_id` can be any integer, but remember the charger needs to be registered in the server database for the component to work correctly.
+
+This has to be done manually as it is a part of the charging station setup process, supposed to be performed by the charging station owner. However, by default, the server database will contain 8 chargers:
+* The chargers with ID 1, 2, 3, 4 are *reservable* chargers.
+* The chargers with ID 5, 6, 7, 8 are *non-reservable* chargers.
+
+
+### Server
+```
+python src/components/server/run.py
+```
 # Raspberry Pi
 ## Information about the Pi
 Hostname: raspberrypi
@@ -18,38 +73,6 @@ Write this in the terminal:
 ssh g11@raspberrypi.local
 cd /home/g11/Projects/Spec3-Final/
 ```
-  
-
-
-# Running the Application
-## Installation
-### MacOS and Linux
-Execute the following commands from the root directory:
-```bash
-python3.12 -m venv env
-source env/bin/activate
-pip install -r requirements.txt
-```
-### Windows
-Execute the following commands from the root directory:
-```bash
-python3.12 -m venv env
-source .\venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-## Running
-Activate the virtual environment with `source env/bin/activate` (Mac/Linux).
-Run the application with:
-```
-python src/main.py <component-name>
-```
-
-The attribute `component-name`can be one of the following:
-* `car`
-* `charger`
-* `app`
-* `server`
 
 # Using SenseHat to light up display
 ## Currently available lighting modes (state: description):
