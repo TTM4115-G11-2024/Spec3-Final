@@ -189,7 +189,7 @@ class Display:
             #self.sense.clear(COLORS["red"]) # Example usage
 
             # TODO: Send the "connected" message here.
-            self.stm.send("nozzle_disconnected")
+            #self.stm.send("nozzle_disconnected")
 
             self.connected = False
             print("Charger Nozzle: Disconnected")
@@ -197,7 +197,7 @@ class Display:
         # When nozzle is disconnected.
         else:
             # TODO: Send the "disconnected" message here.
-            self.stm.send("nozzle_connected")
+            #self.stm.send("nozzle_connected")
             self.connected = True
             print("Charger Nozzle: Connected")
 
