@@ -4,9 +4,10 @@ import paho.mqtt.client as mqtt
 import stmpy
 #import audio
 import requests
-#import sensehat as SH
 from sense_hat import SenseHat
 import time
+import sys
+
 
 # Configure the MQTT settings 
 MQTT_BROKER = "test.mosquitto.org"
@@ -28,8 +29,16 @@ threading functionality in sensehat.py.
 
 # State machine logic for the Charger
 class ChargerLogic:
-    def __init__(self, charger_id, component):
 
+    def handle_exception(self, exc_type, exc_value, exc_traceback):
+        self.exception = exc_value
+        # Send an "error" event to the state machine
+        self.stm.send("error")
+        # Print the exception
+        print(f"Error occurred: \n {exc_value} \n")
+
+    def __init__(self, charger_id, component):
+        self.exception = None
         self.component : ChargerComponent = component
         self.charger_id : int = charger_id
 
@@ -45,6 +54,7 @@ class ChargerLogic:
             {"trigger": "charging_timer",  "source": "charging", "target": "connected", "effect": "on_battery_charged"}, # should target be idle or connected?
             {"trigger": "battery_update", "source": "charging", "target": "charging", "effect": "on_battery_update"},
             # Error transitions
+            {"trigger": "error", "source": "idle", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "charging", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "connected", "target": "error", "effect": "on_error_occur"},
             {"trigger": "resolved", "source": "error", "target": "idle", "effect": "on_error_resolved"},
@@ -52,6 +62,9 @@ class ChargerLogic:
         ]
 
         self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, obj=self)
+
+        # Set the function 'handle_exception' as the global exception handler
+        sys.excepthook = self.handle_exception
 
         self.interface = ChargerInterface("init", self.stm)
         self.interface.start()
@@ -63,9 +76,9 @@ class ChargerLogic:
         self.max_charging_time = 60 * 30 * 1000
 
     def stm_init(self):
-        self.interface.state = "available"
         self.interface.battery_cap = 0
         self._deactivate_charger_in_server() # Comment out this to test the code without server set up.
+        self.interface.state = "available"
     
     def on_battery_update(self):
         self.interface.battery_lvl = self.current_car_battery
@@ -128,12 +141,33 @@ class ChargerLogic:
         
 
     def on_error_occur(self):
+        exception = self.exception
         self.interface.state = "error"
-        print("Error occurred")
+        print(f"Trying to resolve error: \n[ {exception}] \n")
+       
+        # TODO: Resolve error code here
+
+        if str(exception)[:18] == "HTTPConnectionPool":
+            attempt = 0
+            while True:
+                try:
+                    attempt += 1
+                    url = f"{SERVER_URL}/chargers/{self.charger_id}/deactivate/"
+                    print(f"(Attempt {attempt}) Trying to reconnect to: [{url}]...")
+                    requests.post(url=url)
+                    break
+                except Exception as e:
+                    time.sleep(10)
+
+        time.sleep(3)
+        self.stm.send("resolved")
+        
+        
+        
 
     def on_error_resolved(self):
         self.interface.state = "available"
-        print("Error resolved")
+        print("Error resolved. Charger is now available.")
 
 
     def on_hardware_failure(self):
@@ -145,8 +179,14 @@ class ChargerLogic:
         self._deactivate_charger_in_server()
     
     def _deactivate_charger_in_server(self):
-        url = f"{SERVER_URL}/chargers/{self.charger_id}/deactivate/"
-        requests.post(url=url)
+        try:
+            url = f"{SERVER_URL}/chargers/{self.charger_id}/deactivate/"
+            requests.post(url=url)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.handle_exception(exc_type, e, exc_traceback)
+            
+
 
 
 
