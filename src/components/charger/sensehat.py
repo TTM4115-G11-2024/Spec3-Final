@@ -179,6 +179,7 @@ class ChargerInterface:
         self.sense.show_message("Authenticating...", text_colour=COLORS["orange"], back_colour=COLORS["none"])
         time.sleep(self.wait) # Keep it stable for some time, so the user see it has been in this state. 
 
+    # Callback function for middle joystick button to set Connected/Disconnected Nozzle.
     def nozzle(self, event):
         if event.action != 'pressed':
             return
