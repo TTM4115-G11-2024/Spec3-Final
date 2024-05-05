@@ -45,8 +45,8 @@ python src/components/charger/run.py <charger_id>
 The `charger_id` can be any integer, but remember the charger needs to be registered in the server database for the component to work correctly.
 
 This has to be done manually as it is a part of the charging station setup process, supposed to be performed by the charging station owner. However, by default, the server database will contain 8 chargers:
-* The chargers with ID 1, 2, 3, 4 are *reservable* chargers.
-* The chargers with ID 5, 6, 7, 8 are *non-reservable* chargers.
+* The chargers with ID 1, 2, 3, 4 are *non-reservable* chargers.
+* The chargers with ID 5, 6, 7, 8 are *reservable* chargers.
 
 
 ### Server

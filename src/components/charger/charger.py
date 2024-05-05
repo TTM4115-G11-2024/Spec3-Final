@@ -20,7 +20,7 @@ CAR_TOPIC = "ttm4115/g11/cars"
 # Server settings
 SERVER_URL = "http://localhost:8000"
 
-logger = logging.getLogger("car_logger")
+logger = logging.getLogger("charger_logger")
 
 
 '''

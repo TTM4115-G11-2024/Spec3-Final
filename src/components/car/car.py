@@ -54,7 +54,7 @@ class BatteryLogic:
     def on_charging_update(self):
         if self.percentage < 99: # prevent going over 100% because its not possible
             self.percentage += 2
-        logger.debug(f"Charging percentage updated to {self.percentage}.")
+        logger.info(f"Charging percentage updated to {self.percentage}.")
 
         # Send battery percentage to charger
         topic = f"{CHARGER_TOPIC}/{self.charger_id}"
