@@ -49,10 +49,11 @@ class ChargerLogic:
             {"trigger": "nozzle_connected", "source": "idle", "target": "connected", "effect": "on_nozzle_connected"},
             {"trigger": "nozzle_disconnected", "source": "connected", "target": "idle", "effect": "on_nozzle_disconnected"},
             {"trigger": "start_charging", "source": "connected", "target": "charging", "effect": "stop_timer('charging_timer');on_start_charging"},
-            #{"trigger": "start_charging", "source": "idle", "target": "idle", "effect": "on_attempt_start_charging"}
-            {"trigger": "battery_charged", "source": "charging", "target": "connected","effect": "on_battery_charged"}, # should target be idle or connected?
-            {"trigger": "charging_timer",  "source": "charging", "target": "connected", "effect": "on_battery_charged"}, # should target be idle or connected?
+            {"trigger": "battery_charged", "source": "charging", "target": "connected","effect": "on_battery_charged"},
+            {"trigger": "charging_timer",  "source": "charging", "target": "connected", "effect": "on_battery_charged"},
             {"trigger": "battery_update", "source": "charging", "target": "charging", "effect": "on_battery_update"},
+            {"trigger": "nozzle_disconnected", "source": "charging", "target": "idle", "effect": "on_nozzle_force_disconnected"},
+            {"trigger": "start_charging", "source": "idle", "target": "idle", "effect": "on_start_charging_attempt"},
             # Error transitions
             {"trigger": "error", "source": "idle", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "charging", "target": "error","effect": "on_error_occur"},
@@ -101,25 +102,37 @@ class ChargerLogic:
     def on_nozzle_disconnected(self):
         self.interface.state = "available"
         print("Charger unplugged from car.")
+    
+
+    def on_nozzle_force_disconnected(self):
+        ''' Triggered when the nozzle is disconnected while charging'''
+        print("Charger was disconnected while charging")
+        
+        self._stop_car_stm_charging()
+        self._reset_attributes()
+        self._deactivate_charger_in_server()
+        
 
 
     def on_start_charging(self):
         self.interface.battery_cap = self.battery_target
 
         print(f"Charging started for car {self.car_id} with target {self.battery_target}%")
+        
         self.stm.start_timer("charging_timer", self.max_charging_time)
         print(f"Started charging_timer with {self.max_charging_time/1000}s")
 
-        # send start charging to car
-        topic = f"{CAR_TOPIC}/{self.car_id}"
-        payload = {
-            "command": "start_charging",
-            "charger_id": self.charger_id,
-        }
-        payload = json.dumps(payload)
-        self.component.mqtt_client.publish(topic, payload)
+        self._start_car_stm_charging()
 
         #audio.play_charging_started_sound()
+
+
+    def on_start_charging_attempt(self):
+        '''Triggered when car tries to start charging without being plugged in '''
+        # when receiving start_charging, the server will have made the charger unavailable
+        # this method therefor has to make the charger available again
+        print("Someone attempted to start charging while in state idle (not connected)")
+        self._deactivate_charger_in_server()
 
 
     def on_battery_charged(self):
@@ -127,16 +140,9 @@ class ChargerLogic:
         
         self.interface.state = "battery charged"
 
-        # send stop charging signal to car
-        topic = f"{CAR_TOPIC}/{self.car_id}"
-        payload = {"command": "stop_charging"}
-        payload = json.dumps(payload)
-        self.component.mqtt_client.publish(topic, payload)
-
+        self._stop_car_stm_charging()
         self.make_charger_available()
-        self.car_id = None
-        self.battery_target = 0
-        self.current_car_battery = 0
+        self._reset_attributes()
         #audio.play_charging_completed_sound()
         
 
@@ -185,7 +191,32 @@ class ChargerLogic:
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.handle_exception(exc_type, e, exc_traceback)
-            
+
+        
+    def _stop_car_stm_charging(self):
+        ''' Sends stop charging signal to car '''
+        topic = f"{CAR_TOPIC}/{self.car_id}"
+        payload = {"command": "stop_charging"}
+        payload = json.dumps(payload)
+        self.component.mqtt_client.publish(topic, payload)
+    
+
+    def _start_car_stm_charging(self):
+        ''' Sends start charging signal to car '''
+        topic = f"{CAR_TOPIC}/{self.car_id}"
+        payload = {
+            "command": "start_charging",
+            "charger_id": self.charger_id,
+        }
+        payload = json.dumps(payload)
+        self.component.mqtt_client.publish(topic, payload)
+    
+
+    def _reset_attributes(self):
+        self.car_id = None
+        self.battery_target = 0
+        self.current_car_battery = 0
+   
 
 
 
