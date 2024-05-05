@@ -17,7 +17,7 @@ CHARGER_TOPIC = "ttm4115/g11/chargers"
 CAR_TOPIC = "ttm4115/g11/cars"
 
 # Server settings
-SERVER_URL = "http://rnzzm-2001-700-300-4015-6570-42-ebcd-44ec.a.free.pinggy.link"
+SERVER_URL = "http://localhost:8000"
 
 
 '''
@@ -141,7 +141,7 @@ class ChargerLogic:
         self.interface.state = "battery charged"
 
         self._stop_car_stm_charging()
-        self.make_charger_available()
+        self._deactivate_charger_in_server()
         self._reset_attributes()
         #audio.play_charging_completed_sound()
         
@@ -180,9 +180,6 @@ class ChargerLogic:
         self.interface.state = "error"
         print("Hardware failure detected. Shutting down.")
 
-    
-    def make_charger_available(self):
-        self._deactivate_charger_in_server()
     
     def _deactivate_charger_in_server(self):
         try:
