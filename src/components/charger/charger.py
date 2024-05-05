@@ -66,7 +66,7 @@ class ChargerLogic:
         self.stm.send("nozzle_connected") # for now nozzle is automatically connected
     
     def on_battery_update(self):
-        self.interface.battery = self.current_car_battery
+        self.interface.battery_lvl = self.current_car_battery
         # Check if battery level reached
         if self.current_car_battery >= self.battery_target:
             self.stm.send("battery_charged")
