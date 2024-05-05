@@ -7,6 +7,7 @@ import requests
 from sense_hat import SenseHat
 import time
 import sys
+import logging
 
 
 # Configure the MQTT settings 
@@ -19,6 +20,8 @@ CAR_TOPIC = "ttm4115/g11/cars"
 # Server settings
 SERVER_URL = "http://localhost:8000"
 
+logger = logging.getLogger("car_logger")
+
 
 '''
 NOTE: The 'self.interface.state' variable used in the code,
@@ -29,14 +32,6 @@ threading functionality in sensehat.py.
 
 # State machine logic for the Charger
 class ChargerLogic:
-
-    def handle_exception(self, exc_type, exc_value, exc_traceback):
-        self.exception = exc_value
-        # Send an "error" event to the state machine
-        self.stm.send("error")
-        # Print the exception
-        print(f"Error occurred: \n {exc_value} \n")
-
     def __init__(self, charger_id, component):
         self.exception = None
         self.component : ChargerComponent = component
@@ -83,30 +78,29 @@ class ChargerLogic:
     
     def on_battery_update(self):
         self.interface.battery_lvl = self.current_car_battery
-        # Check if battery level reached
+
         if self.current_car_battery >= self.battery_target:
             self.stm.send("battery_charged")
-            print(f"Received battery update: {self.current_car_battery}%. Charging stopped.")
         else:
             # display the charging percentage on sense hat
             self.interface.state = "battery status"
-            print(f"Received battery update: {self.current_car_battery}%. Charging continues.")
-            pass
+
+        logger.info(f"Received battery update: {self.current_car_battery}%.")
 
 
     def on_nozzle_connected(self):
         self.interface.state = "unavailable"
-        print("Charger plugged to car.")   
+        logger.info("Charger moved from state idle -> connected.")
 
 
     def on_nozzle_disconnected(self):
         self.interface.state = "available"
-        print("Charger unplugged from car.")
+        logger.info("Charger moved from state connected -> idle.")
     
 
     def on_nozzle_force_disconnected(self):
         ''' Triggered when the nozzle is disconnected while charging'''
-        print("Charger was disconnected while charging")
+        logger.warn("Charger moved from state charging -> idle. The charger was removed during charging.")
         
         self._stop_car_stm_charging()
         self._reset_attributes()
@@ -117,11 +111,10 @@ class ChargerLogic:
     def on_start_charging(self):
         self.interface.battery_cap = self.battery_target
 
-        print(f"Charging started for car {self.car_id} with target {self.battery_target}%")
+        logger.info(f"Charging started for car {self.car_id} with battery target {self.battery_target}%.")
+        logger.info(f"The maximum time for charging is {self.max_charging_time/1000}s")
         
         self.stm.start_timer("charging_timer", self.max_charging_time)
-        print(f"Started charging_timer with {self.max_charging_time/1000}s")
-
         self._start_car_stm_charging()
 
         #audio.play_charging_started_sound()
@@ -131,12 +124,12 @@ class ChargerLogic:
         '''Triggered when car tries to start charging without being plugged in '''
         # when receiving start_charging, the server will have made the charger unavailable
         # this method therefor has to make the charger available again
-        print("Someone attempted to start charging while in state idle (not connected)")
+        logger.info("Someone attempted to start charging while in state idle (not connected)")
         self._deactivate_charger_in_server()
 
 
     def on_battery_charged(self):
-        print(f"Charging stopped for the car {self.car_id}")
+        logger.info(f"Charging finished for {self.car_id}. Charger moved from state charging -> connected.")
         
         self.interface.state = "battery charged"
 
@@ -173,12 +166,20 @@ class ChargerLogic:
 
     def on_error_resolved(self):
         self.interface.state = "available"
-        print("Error resolved. Charger is now available.")
+        logger.info("Error resolved. Charger is now available.")
 
 
     def on_hardware_failure(self):
         self.interface.state = "error"
-        print("Hardware failure detected. Shutting down.")
+        logger.error("Hardware failure detected. Shutting down.")
+
+    def handle_exception(self, exc_type, exc_value, exc_traceback):
+        self.exception = exc_value
+        # Send an "error" event to the state machine
+        self.stm.send("error")
+        # Print the exception
+        print(f"Error occurred: \n {exc_value} \n")
+        
 
     
     def _deactivate_charger_in_server(self):
@@ -240,30 +241,29 @@ class ChargerComponent:
 
     # Initial connected message
     def on_connect(self, client, userdata, flags, rc):
-        print("MQTT Connected")
+        if rc == 0:
+            logger.debug(f"Client connected to broker {MQTT_BROKER}:{MQTT_PORT}.")
+        else:
+            logger.debug(f"Broker {MQTT_BROKER}:{MQTT_PORT} refused connection")
 
     # Battery percentage
     def on_message(self, client, userdata, msg):
+        logger.debug(f"MQTT Client recieved a message in topic '{msg.topic}': {msg.payload}")
+        
         msg = json.loads(msg.payload)  # now a dict
-
         command = msg.get("command")
-
-        print(f"charger {self.charger.charger_id} got a message.")
 
         if command == "start_charging":
             battery_target = msg.get("battery_target")
             car_id = msg.get("car_id")
             max_charging_time = msg.get("max_charging_time")
+            
             self.charger.battery_target = battery_target
             self.charger.car_id = car_id
             self.charger.max_charging_time = max_charging_time * 1000
             
             self.charger.stm.send("start_charging")
-            
-            
-            print(f"max_charging_time: {max_charging_time}")
-
-        # Handle stop_charging
+        
         elif command == "stop_charging":
             self.charger.stm.send("battery_charged")
         
@@ -294,7 +294,7 @@ OVERFLOW_PIXEL = 63
 
 class ChargerInterface:
     def __init__(self, state, stm):
-        print("Charger interface: Initializing")
+        logger.debug("Charger interface: initializing.")
         self.sense = SenseHat()
         self.running = False
         
@@ -327,20 +327,20 @@ class ChargerInterface:
         
     # Starting the thread
     def start(self):
-        print("Charger interface: Starting thread")
+        logger.debug("Charger interface: Starting thread")
         self.running = True
         self.display_thread = threading.Thread(target=self._loop)
         self.display_thread.start()
-        print("Charger interface: Started")
+        logger.debug("Charger interface: Started")
 
     # Stopping the thread
     def stop(self):
-        print("Charger interface: Stopping thread")
+        logger.debug("Charger interface: Stopping thread")
         self.running = False
         self.sense.clear()
         if self.display_thread:
             self.display_thread.join()
-        print("Charger interface: Stopped")
+        logger.debug("Charger interface: Stopped")
 
     def display_two_digits(self, a_number, color):
 
