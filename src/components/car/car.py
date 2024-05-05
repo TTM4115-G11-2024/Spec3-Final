@@ -5,11 +5,11 @@ import stmpy
 import json
 import logging
 
-# TODO: choose proper MQTT broker address
+# Configure the MQTT settings 
 MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
 
-# TODO: choose proper topics for communication
+# Server settings
 CAR_TOPIC = "ttm4115/g11/cars"
 CHARGER_TOPIC = "ttm4115/g11/chargers"
 

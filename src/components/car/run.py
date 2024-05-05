@@ -25,8 +25,8 @@ def get_car_id_arg():
 
 def run():
     logger_init(logging.DEBUG)
+    
     car_id = get_car_id_arg()
-
     BatteryComponent(car_id)
 
 def run_from_python(car_id):
