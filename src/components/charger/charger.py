@@ -6,17 +6,20 @@ import requests
 import sensehat as SH
 import time
 
+'''
+The reason we choose to use "self.display.state = "state here"" functionality,
+so an internal state machine in the Display class of the SenseHat:
+- Run threading, as one of the display 
+'''
 
-
-# Configure the MQTT settings
+# Configure the MQTT settings 
 MQTT_BROKER = "test.mosquitto.org"
 MQTT_PORT = 1883
 CHARGER_TOPIC = "ttm4115/g11/chargers"
 CAR_TOPIC = "ttm4115/g11/cars"
 
 # Server settings
-SERVER_URL = "http://localhost:8000"
-# error_handler = SH.ErrorHandler()
+SERVER_URL = "http://rnzzm-2001-700-300-4015-6570-42-ebcd-44ec.a.free.pinggy.link"
 
 
 # State machine logic for the Charger
@@ -28,6 +31,8 @@ class ChargerLogic:
         self.component : ChargerComponent = component
         self.charger_id : int = charger_id
 
+        # The triggers "nozzle_connceted" and "nozzle_disconnected" is triggered from SenseHat joystick middle-button press.
+        # See sensehat.py for more details.
         transitions = [
             {"source": "initial", "target": "idle", "effect": "stm_init"},
             {"trigger": "nozzle_connected", "source": "idle", "target": "connected", "effect": "on_nozzle_connected"},
@@ -57,6 +62,7 @@ class ChargerLogic:
         self.display.battery_cap = 0
 
         self._deactivate_charger_in_server()
+        # TODO: Remove this, as the button on the SenseHat does this functionality below.
         self.stm.send("nozzle_connected") # for now nozzle is automatically connected
     
     def on_battery_update(self):
