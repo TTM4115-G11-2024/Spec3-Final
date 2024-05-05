@@ -7,8 +7,8 @@ import sensehat as SH
 import time
 
 '''
-The reason we choose to use "self.display.state = "state here"" functionality,
-so an internal state machine in the Display class of the SenseHat:
+The reason we choose to use "self.interface.state = "state here"" functionality,
+so an internal state machine in the ChargerInterface class of the SenseHat:
 - Run threading, as one of the display 
 '''
 
@@ -25,8 +25,8 @@ SERVER_URL = "http://rnzzm-2001-700-300-4015-6570-42-ebcd-44ec.a.free.pinggy.lin
 # State machine logic for the Charger
 class ChargerLogic:
     def __init__(self, charger_id, component):
-        self.display = SH.Display("init")
-        self.display.start()
+        self.interface = SH.ChargerInterface("init")
+        self.interface.start()
 
         self.component : ChargerComponent = component
         self.charger_id : int = charger_id
@@ -58,38 +58,38 @@ class ChargerLogic:
         self.max_charging_time = 60 * 30 * 1000
 
     def stm_init(self):
-        self.display.state = "available"
-        self.display.battery_cap = 0
+        self.interface.state = "available"
+        self.interface.battery_cap = 0
 
         self._deactivate_charger_in_server()
         # TODO: Remove this, as the button on the SenseHat does this functionality below.
         self.stm.send("nozzle_connected") # for now nozzle is automatically connected
     
     def on_battery_update(self):
-        self.display.battery = self.current_car_battery
+        self.interface.battery = self.current_car_battery
         # Check if battery level reached
         if self.current_car_battery >= self.battery_target:
             self.stm.send("battery_charged")
             print(f"Received battery update: {self.current_car_battery}%. Charging stopped.")
         else:
             # display the charging percentage on sense hat
-            self.display.state = "battery status"
+            self.interface.state = "battery status"
             print(f"Received battery update: {self.current_car_battery}%. Charging continues.")
             pass
 
 
     def on_nozzle_connected(self):
-        self.display.state = "unavailable"
+        self.interface.state = "unavailable"
         print("Charger plugged to car.")   
 
 
     def on_nozzle_disconnected(self):
-        self.display.state = "available"
+        self.interface.state = "available"
         print("Charger unplugged from car.")
 
 
     def on_start_charging(self):
-        self.display.battery_cap = self.battery_target
+        self.interface.battery_cap = self.battery_target
 
         print(f"Charging started for car {self.car_id} with target {self.battery_target}%")
         self.stm.start_timer("charging_timer", self.max_charging_time)
@@ -110,7 +110,7 @@ class ChargerLogic:
     def on_battery_charged(self):
         print(f"Charging stopped for the car {self.car_id}")
         
-        self.display.state = "battery charged"
+        self.interface.state = "battery charged"
 
         # send stop charging signal to car
         topic = f"{CAR_TOPIC}/{self.car_id}"
@@ -126,16 +126,16 @@ class ChargerLogic:
         
 
     def on_error_occur(self):
-        self.display.state = "error"
+        self.interface.state = "error"
         print("Error occurred")
 
     def on_error_resolved(self):
-        self.display.state = "available"
+        self.interface.state = "available"
         print("Error resolved")
 
 
     def on_hardware_failure(self):
-        self.display.state = "error"
+        self.interface.state = "error"
         print("Hardware failure detected. Shutting down.")
 
     

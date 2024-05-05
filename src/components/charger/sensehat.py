@@ -25,9 +25,9 @@ NEGATIVE_SIGN_END = 58
 OVERFLOW_PIXEL = 63
 
 
-class Display:
+class ChargerInterface:
     def __init__(self, state):
-        print("Charger display: Initializing")
+        print("Charger interface: Initializing")
         self.sense = SenseHat()
         self.running = False
         
@@ -57,20 +57,20 @@ class Display:
         
     # Starting the thread
     def start(self):
-        print("Charger display: Starting thread")
+        print("Charger interface: Starting thread")
         self.running = True
         self.display_thread = threading.Thread(target=self._loop)
         self.display_thread.start()
-        print("Charger display: Started")
+        print("Charger interface: Started")
 
     # Stopping the thread
     def stop(self):
-        print("Charger display: Stopping thread")
+        print("Charger interface: Stopping thread")
         self.running = False
         self.sense.clear()
         if self.display_thread:
             self.display_thread.join()
-        print("Charger display: Stopped")
+        print("Charger interface: Stopped")
 
     def display_two_digits(self, a_number, color):
 
@@ -198,6 +198,7 @@ class Display:
         else:
             # TODO: Send the "disconnected" message here.
             #self.stm.send("nozzle_connected")
+            
             self.connected = True
             print("Charger Nozzle: Connected")
 

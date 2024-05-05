@@ -1,10 +1,8 @@
 import sensehat as SH
 from sense_hat import SenseHat
 
-display = SH.Display("init")
-display.start()
-
-sense = SenseHat()
+interface = SH.ChargerInterface("init")
+interface.start()
 
 
 while True:
