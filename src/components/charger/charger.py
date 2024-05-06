@@ -193,6 +193,7 @@ class ChargerLogic:
         self.stm.send("error")
         # Print the exception
         print(f"Error occurred: \n {exc_value} \n")
+        print(f"Error type: {exc_type}")
         
 
     
