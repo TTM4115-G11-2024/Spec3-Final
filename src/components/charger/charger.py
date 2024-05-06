@@ -18,7 +18,7 @@ CHARGER_TOPIC = "ttm4115/g11/chargers"
 CAR_TOPIC = "ttm4115/g11/cars"
 
 # Server settings
-SERVER_URL = "https://rnhfb-129-241-236-237.a.free.pinggy.link"
+SERVER_URL = "http://rnknp-129-241-236-237.a.free.pinggy.link"
 
 logger = logging.getLogger("charger_logger")
 
