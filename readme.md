@@ -16,7 +16,7 @@ For context on the repository it's important to have read our System Specificati
 * `src/components/charger` has 1 directory and 3 files:
   * `audio_files` stores the audio files used for the application.
   * `audio.py` contains functions used for playing audio through speakers.
-  * `charger.py` handles the charger component. The component mainly consists of the charger state machine and a MQTT client for communication with other components. Additionally the file contains the logic for the Raspberry PI SenseHAT and joystick.
+  * `charger.py` handles the charger component. The component consists of three classes. One for controlling the state machine, a second one for the MQTT client and a third one for a Raspberry SenseHat. The SenseHat logic includes turning lighting modes for each state of the charger, as well as controlling if the charger nozzle is connected to the car or not. This is done through the joystick's middle-button.
   * `run.py` handles initializing the charger component, similar to a main file.
 
 * `src/components/server` has 8 different files:
