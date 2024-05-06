@@ -51,8 +51,8 @@ class ChargerLogic:
             {"trigger": "nozzle_disconnected", "source": "charging", "target": "idle", "effect": "on_nozzle_force_disconnected"},
             {"trigger": "start_charging", "source": "idle", "target": "idle", "effect": "on_start_charging_attempt"},
             # Error transitions
-            {"trigger": "ct1", "source": "idle", "target": "idle", "effect": "start_timer('ct1', 5000);hello_server"},
-            {"trigger": "ct2", "source": "connected", "target": "connected", "effect": "start_timer('ct2', 1000);hello_server"},
+            {"trigger": "ct1", "source": "idle", "target": "idle", "effect": "hello_server"},
+            {"trigger": "ct2", "source": "connected", "target": "connected", "effect": "hello_server"},
             {"trigger": "error", "source": "idle", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "charging", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "connected", "target": "error", "effect": "on_error_occur"},
