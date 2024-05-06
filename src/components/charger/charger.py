@@ -34,6 +34,7 @@ threading functionality in sensehat.py.
 class ChargerLogic:
     def __init__(self, charger_id, component):
         self.exception = None
+        self.exception_type = None
         self.component : ChargerComponent = component
         self.charger_id : int = charger_id
 
@@ -148,12 +149,13 @@ class ChargerLogic:
 
     def on_error_occur(self):
         exception = self.exception
+        exception_type = self.exception_type
         self.interface.state = "error"
         print(f"Trying to resolve error: \n[ {exception}] \n")
        
         # TODO: Resolve error code here
 
-        if str(exception)[:18] == "HTTPConnectionPool":
+        if exception_type == requests.exceptions.ConnectionError:
             attempt = 0
             while True:
                 try:
@@ -173,7 +175,7 @@ class ChargerLogic:
         try:
             response = requests.get(f"{SERVER_URL}/hello")
             logger.debug(f"Received response from server.")
-        except Exception as e:
+        except ConnectionError as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.handle_exception(exc_type, e, exc_traceback)
 
@@ -189,6 +191,7 @@ class ChargerLogic:
 
     def handle_exception(self, exc_type, exc_value, exc_traceback):
         self.exception = exc_value
+        self.exception_type = exc_type
         # Send an "error" event to the state machine
         self.stm.send("error")
         # Print the exception
