@@ -18,7 +18,7 @@ CHARGER_TOPIC = "ttm4115/g11/chargers"
 CAR_TOPIC = "ttm4115/g11/cars"
 
 # Server settings
-SERVER_URL = "http://rnlgp-129-241-236-237.a.free.pinggy.link"
+SERVER_URL = "http://rngvk-129-241-236-237.a.free.pinggy.link"
 
 logger = logging.getLogger("charger_logger")
 
@@ -51,8 +51,8 @@ class ChargerLogic:
             {"trigger": "nozzle_disconnected", "source": "charging", "target": "idle", "effect": "on_nozzle_force_disconnected"},
             {"trigger": "start_charging", "source": "idle", "target": "idle", "effect": "on_start_charging_attempt"},
             # Error transitions
-            {"trigger": "x1", "source": "idle", "target": "idle", "effect": "start_timer('x1', 5000);hello_server"},
-            {"trigger": "x2", "source": "connected", "target": "connected", "effect": "start_timer('x2', 1000);hello_server"},
+            {"trigger": "ct1", "source": "idle", "target": "idle", "effect": "start_timer('ct1', 5000);hello_server"},
+            {"trigger": "ct2", "source": "connected", "target": "connected", "effect": "start_timer('ct2', 1000);hello_server"},
             {"trigger": "error", "source": "idle", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "charging", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "connected", "target": "error", "effect": "on_error_occur"},
@@ -61,8 +61,8 @@ class ChargerLogic:
         ]
 
         states = [
-            {"name": "idle", "entry": "start_timer('x1', 5000)"},
-            {"name": "connected", "entry": "start_timer('x2', 1000)"},
+            {"name": "idle", "entry": "start_timer('ct1', 5000)"},
+            {"name": "connected", "entry": "start_timer('ct2', 1000)"},
         ]
 
         self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, states=states, obj=self)
@@ -175,7 +175,7 @@ class ChargerLogic:
         try:
             response = requests.get(f"{SERVER_URL}/hello")
             logger.debug(f"Received response from server.")
-        except ConnectionError as e:
+        except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.handle_exception(exc_type, e, exc_traceback)
 
