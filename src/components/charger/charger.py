@@ -151,7 +151,7 @@ class ChargerLogic:
         exception = self.exception
         exception_type = self.exception_type
         self.interface.state = "error"
-        print(f"Trying to resolve error: \n[ {exception}] \n")
+        logger.debug(f"Trying to resolve error: \n[ {exception}] \n")
        
         # TODO: Resolve error code here
 
@@ -161,7 +161,7 @@ class ChargerLogic:
                 try:
                     attempt += 1
                     url = f"{SERVER_URL}/chargers/{self.charger_id}/deactivate/"
-                    print(f"(Attempt {attempt}) Trying to reconnect to: [{url}]...")
+                    logger.debug(f"(Attempt {attempt}) Trying to reconnect to: [{url}]...")
                     requests.post(url=url)
                     break
                 except Exception as e:
@@ -195,8 +195,8 @@ class ChargerLogic:
         # Send an "error" event to the state machine
         self.stm.send("error")
         # Print the exception
-        print(f"Error occurred: \n {exc_value} \n")
-        print(f"Error type: {exc_type}")
+        logger.error(f"Error occurred: \n {exc_value} \n")
+        logger.error(f"Error type: {exc_type}")
         
 
     
@@ -424,9 +424,6 @@ class ChargerInterface:
         
     
     def init(self):
-        #message = "Sensehat is Starting up..."
-        #print(message)
-        #self.sense.show_message(message, text_colour=white, back_colour=COLORS["none"])
         return
 
     # Display a red "X".
@@ -474,22 +471,13 @@ class ChargerInterface:
     
         # When nozzle is connected
         if (self.connected): 
-
-            #self.sense.clear(COLORS["red"]) # Example usage
-
-            # TODO: Send the "connected" message here.
             self.stm.send("nozzle_disconnected")
-
             self.connected = False
-            #print("Charger Nozzle: Disconnected")
             
         # When nozzle is disconnected.
         else:
-            # TODO: Send the "disconnected" message here.
             self.stm.send("nozzle_connected")
-            
             self.connected = True
-            #print("Charger Nozzle: Connected")
 
     
     
