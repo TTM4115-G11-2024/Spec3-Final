@@ -172,7 +172,7 @@ class ChargerLogic:
     def hello_server(self):
         try:
             response = requests.get(f"{SERVER_URL}/hello")
-            logger.debug(f"Received response from server: {response.status_code}")
+            logger.debug(f"Received response from server.")
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             self.handle_exception(exc_type, e, exc_traceback)
