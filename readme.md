@@ -3,8 +3,56 @@ This project is done by Team 11 in the course TTM4115, the spring of 2024.
 
 For context on the repository it's important to have read our System Specification 3 (course delivery).
 
-# Running the Application
-## Installation
+# Project Structure
+## Files
+* `src/components` hold all the different components of this project, which includes: app (UI), car, charger, and server. Each of the component has their own directory.
+
+* `src/components/app` has  a single file `run.py` containing all the UI logic.
+
+* `src/components/car` has two files:
+  * `car.py` handles the car component. The component mainly consists of the car state machine and a MQTT client for communication with other components.
+  * `run.py` handles initializing the car component, similar to a main file.
+
+* `src/components/charger` has 1 directory and 3 files:
+  * `audio_files` stores the audio files used for the application.
+  * `audio.py` contains functions used for playing audio through speakers.
+  * `charger.py` handles the charger component. The component mainly consists of the charger state machine and a MQTT client for communication with other components. Additionally the file contains the logic for the Raspberry PI SenseHAT and joystick.
+  * `run.py` handles initializing the charger component, similar to a main file.
+
+* `src/components/server` has 8 different files:
+  * `crud.py` contains methods used for interacting directly with the SQLite database. 
+  * `database.py` handles the database instance.
+  * `endpoints.py` defines all the REST API endpoints of the server, which also includes input validation for data sent to the server.
+  * `models.py` contains the database model definitions, with their relationships. (Object–relational mapping)
+  * `mqtt.py` handles MQTT communication for the server.
+  * `run.py` handles starting the HTTP server, similar to a main file.
+  * `schemas.py` defines the formats of data returned from the server, and received by the server.
+  * `utils.py` contains several utility functions, mostly related to date validation.
+
+* `db.sqlite` is the database file used by the server component containing all the database data. The file extension is `.sqlite` since we are using SQLite as the database engine for this project.
+
+## Components
+### Car
+The car component represents a car in the charging system. When a car receives a start charging signal the component will simulate being charged until receiving a stop charging signal.
+
+### Charger
+The charger component represents a charger in the charging system. TODO: say more?
+### Server
+The server component is a HTTP server handling all the data stored for this application.
+
+* The server provides REST endpoints that allows *users* to save their car ID, make a reservation, and  get an overview of all chargers.
+
+* The server allows reservable *chargers* to verify that a car has a reservation, and updating the status of chargers between available and unavailable. 
+
+* The server allows *charging station managers* to initialize chargers for their station.
+
+_This is not everything the server does, but rather an overview of the most important functionality._
+
+
+
+
+# Running Components
+## Setting up Virtual Environment
 ### MacOS and Linux
 Execute the following commands from the root directory:
 ```bash

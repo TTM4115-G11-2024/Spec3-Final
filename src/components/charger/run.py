@@ -22,6 +22,7 @@ def get_charger_id_arg():
     return charger_id
 
 def run():
+    ''' Starts charger component from args '''
     logger_init(logging.DEBUG)
 
     charger_id = get_charger_id_arg()

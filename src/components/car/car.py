@@ -18,7 +18,7 @@ logger = logging.getLogger("car_logger")
 class BatteryLogic:
     def __init__(self, car_id, component):
         self.car_id = car_id
-        self.percentage = 10
+        self.percentage = 10 # Assuming the battery is at 10 percent
         self.charger_id = None
         self.component: BatteryComponent = component
         self.mqtt_client = self.component.mqtt_client
@@ -44,12 +44,14 @@ class BatteryLogic:
             obj=self
         )
 
+
     def init_stm(self):
-        pass
+        logger.info("Car state machine initialized")
+
 
     def on_charging(self):
         logger.debug("Car moved from state idle -> charging. Charging has started.")
-        pass
+
 
     def on_charging_update(self):
         if self.percentage < 99: # prevent going over 100% because its not possible
@@ -89,20 +91,19 @@ class BatteryComponent:
         # other variables
         self.charger_id = None
 
+
     def on_message(self, client, userdata, msg):
         logger.debug(f"MQTT Client recieved a message in topic '{msg.topic}': {msg.payload}")
         msg = json.loads(msg.payload)  # now a dict
 
         command = msg.get("command")
 
-        # TODO determine what to do
         if command == "start_charging":
             charger_id = msg.get("charger_id")
             self.battery.charger_id = charger_id
-
             self.battery.stm.send("start_charging")
+            
         elif command == "stop_charging":
-            #self.battery.percentage = 10
             self.battery.stm.send("finish_charging")
 
     def on_connect(self, client, userdata, flags, rc):
