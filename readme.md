@@ -75,8 +75,11 @@ source .\venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### Raspberry Pi: Known issues
+1) PyAudio from 'requirements.txt' may not work on all Raspberry Pi boards without modifications. So be sure to comment this line in the file if issues occur.
+
 ## Running
-First, activate the virtual environment with `source env/bin/activate` (Mac/Linux).
+First, activate the virtual environment with `source env/bin/activate` (Mac/Linux) within the root directory.
 
 Each component has slightly different ways of being started:
 
@@ -93,7 +96,7 @@ The `car_id` can be any string, but remember the car needs to be registered in t
 This is done through the App user interface when prompted for a Car ID.
 
 ### Charger
-NB! This component is supposed to be ran on a Raspberry Pi with sense_hat.
+NB! This component is supposed to be ran on a Raspberry Pi with SenseHat attached.
 ```
 python src/components/charger/run.py <charger_id>
 ```
@@ -110,14 +113,14 @@ python src/components/server/run.py
 ```
 # Raspberry Pi
 ## Information about the Pi
-Hostname: raspberrypi
+Hostname: raspberrypi.local
 
 Username: g11
 
-Password: seveneleven
+Password: 711
 
 - SSH should be activated and use Password above to authenticate.
-- To connect to it use Mobile hotspot on your phone.
+- To connect to it, use Mobile hotspot on your phone.
 - Currently only Sindre's network "Sid" is available, you find this under available WiFi networks.
 - ### The wifi information:
   * WIFI name: Sid
@@ -134,32 +137,30 @@ cd /home/g11/Projects/Spec3-Final/
 1) init: gray background
 2) available: green background
 3) unavailable: orange background
-4) authenticating: "Authenticating..." shown from right to left.
-5) battery status: Two digit number shown in white. When reached battery cap: Blink yellow -> (Batery_cap)% -> Blink yellow -> "Done..." from right to left.
+5) battery status: Two digit number shown in white. When reached battery cap: Blink yellow -> ('Batery_cap')% -> Blink yellow -> "Done..." from right to left.
 6) error: Red X
 
 ## How to use the different SenseHat lighting modes in your code.
-- Best advice: See test_sensehat.py
 1) When charger program starts up, add the following:
 ```
-import sensehat as SH
+from charger import ChargerInterface # For using the sensehat in external file.
 
-display = SH.Display(start_state) # By default use start_state = "init"
-display.start()
+interface = SH.ChargerInterface(start_state) # By default use start_state = "init"
+interface.start()
 ```
 2) Add the state of what to display on SenseHat in your code:
 ```
-display.state = your_state # Remember to add this everytime you want to change the display to another one on the list above.
+interface.state = your_state # Remember to add this everytime you want to change the display to another one on the list above.
 ```
 3) Give SenseHat information about the battery:
 ```
-display.battery_cap = your_battery_cap
+interface.battery_cap = your_battery_cap
 # Considering you are in charging state when this happens:
-display.state = "battery status"
+interface.state = "battery status"
 # Foreach time you read battery status from MQTT update the battery status on SenseHat:
-display.battery = updated_battery_status
+interface.battery = updated_battery_status
 ```
 4) If there is an exit or terminate state/function for your program, add the function that terminates SenseHat too:
 ```
-display.stop()
+interface.stop()
 ```
