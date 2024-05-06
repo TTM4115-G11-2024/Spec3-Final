@@ -170,9 +170,12 @@ class ChargerLogic:
     
 
     def hello_server(self):
-        
-        response = requests.get(f"{SERVER_URL}/hello")
-        logger.debug(f"Received response from server: {response.status_code}")
+        try:
+            response = requests.get(f"{SERVER_URL}/hello")
+            logger.debug(f"Received response from server: {response.status_code}")
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.handle_exception(exc_type, e, exc_traceback)
 
 
     def on_error_resolved(self):
