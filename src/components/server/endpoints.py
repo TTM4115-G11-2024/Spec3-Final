@@ -189,3 +189,8 @@ def create_reservation(reservation: schemas.ReservationCreate, db: Session = Dep
             raise HTTPException(status_code=400, detail="Charger is already booked for the specified timeslot.")
 
     return crud.create_reservation(db, reservation)
+
+
+@router.get("/hello", status_code=200)
+def hello():
+    return "hello"

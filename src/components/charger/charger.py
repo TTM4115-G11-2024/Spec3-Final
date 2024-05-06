@@ -50,6 +50,8 @@ class ChargerLogic:
             {"trigger": "nozzle_disconnected", "source": "charging", "target": "idle", "effect": "on_nozzle_force_disconnected"},
             {"trigger": "start_charging", "source": "idle", "target": "idle", "effect": "on_start_charging_attempt"},
             # Error transitions
+            {"trigger": "x1", "source": "idle", "target": "idle", "effect": "start_timer('x1', 5000);hello_server"},
+            {"trigger": "x2", "source": "connected", "target": "connected", "effect": "start_timer('x2', 1000);hello_server"},
             {"trigger": "error", "source": "idle", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "charging", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "connected", "target": "error", "effect": "on_error_occur"},
@@ -57,7 +59,12 @@ class ChargerLogic:
             {"trigger": "hw_failure", "source": "error", "target": None, "effect": "on_hardware_failure"}
         ]
 
-        self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, obj=self)
+        states = [
+            {"name": "idle", "entry": "start_timer('x1', 5000)"},
+            {"name": "connected", "entry": "start_timer('x2', 1000)"},
+        ]
+
+        self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, states=states, obj=self)
 
         # Set the function 'handle_exception' as the global exception handler
         sys.excepthook = self.handle_exception
@@ -160,9 +167,11 @@ class ChargerLogic:
 
         time.sleep(3)
         self.stm.send("resolved")
-        
-        
-        
+    
+
+    def hello_server(self):
+        requests.get(f"{SERVER_URL}/hello")
+
 
     def on_error_resolved(self):
         self.interface.state = "available"
