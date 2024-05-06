@@ -170,7 +170,9 @@ class ChargerLogic:
     
 
     def hello_server(self):
-        requests.get(f"{SERVER_URL}/hello")
+        
+        response = requests.get(f"{SERVER_URL}/hello")
+        logger.debug(f"Received response from server: {response.status_code}")
 
 
     def on_error_resolved(self):
