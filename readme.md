@@ -36,7 +36,14 @@ For context on the repository it's important to have read our System Specificati
 The car component represents a car in the charging system. When a car receives a start charging signal the component will simulate being charged until receiving a stop charging signal.
 
 ### Charger
-The charger component represents a charger in the charging system. TODO: say more?
+The charger component represents a charger in the charging system.
+* It is simulated on a Raspberry Pi.
+* It runs a state machine.
+* It uses a button for simulating a nozzle, which decides wether the charger is available or connected to a car.
+* It contains a display screen showing the user the current state of the charger.
+* The charger is connected to a webserver.
+* It attempts to handle errors for certain functionalities, such as server connection issues.
+
 ### Server
 The server component is a HTTP server handling all the data stored for this application.
 
