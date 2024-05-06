@@ -18,7 +18,7 @@ CHARGER_TOPIC = "ttm4115/g11/chargers"
 CAR_TOPIC = "ttm4115/g11/cars"
 
 # Server settings
-SERVER_URL = "http://localhost:8000"
+SERVER_URL = "https://rnhfb-129-241-236-237.a.free.pinggy.link"
 
 logger = logging.getLogger("charger_logger")
 
@@ -101,7 +101,7 @@ class ChargerLogic:
     def on_nozzle_force_disconnected(self):
         ''' Triggered when the nozzle is disconnected while charging'''
         logger.warn("Charger moved from state charging -> idle. The charger was removed during charging.")
-        
+        self.interface.state = "available"
         self._stop_car_stm_charging()
         self._reset_attributes()
         self._deactivate_charger_in_server()
