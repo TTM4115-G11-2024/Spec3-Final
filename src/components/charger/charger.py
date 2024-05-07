@@ -18,7 +18,7 @@ CHARGER_TOPIC = "ttm4115/g11/chargers"
 CAR_TOPIC = "ttm4115/g11/cars"
 
 # Server settings
-SERVER_URL = "https://rnhfb-129-241-236-237.a.free.pinggy.link"
+SERVER_URL = "http://localhost:8000"
 
 logger = logging.getLogger("charger_logger")
 
@@ -34,6 +34,7 @@ threading functionality in sensehat.py.
 class ChargerLogic:
     def __init__(self, charger_id, component):
         self.exception = None
+        self.exception_type = None
         self.component : ChargerComponent = component
         self.charger_id : int = charger_id
 
@@ -50,6 +51,8 @@ class ChargerLogic:
             {"trigger": "nozzle_disconnected", "source": "charging", "target": "idle", "effect": "on_nozzle_force_disconnected"},
             {"trigger": "start_charging", "source": "idle", "target": "idle", "effect": "on_start_charging_attempt"},
             # Error transitions
+            {"trigger": "ct1", "source": "idle", "target": "idle", "effect": "hello_server"},
+            {"trigger": "ct2", "source": "connected", "target": "connected", "effect": "hello_server"},
             {"trigger": "error", "source": "idle", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "charging", "target": "error","effect": "on_error_occur"},
             {"trigger": "error", "source": "connected", "target": "error", "effect": "on_error_occur"},
@@ -57,7 +60,12 @@ class ChargerLogic:
             {"trigger": "hw_failure", "source": "error", "target": None, "effect": "on_hardware_failure"}
         ]
 
-        self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, obj=self)
+        states = [
+            {"name": "idle", "entry": "start_timer('ct1', 5000)"},
+            {"name": "connected", "entry": "start_timer('ct2', 1000)"},
+        ]
+
+        self.stm = stmpy.Machine(name=f"{self.charger_id}", transitions=transitions, states=states, obj=self)
 
         # Set the function 'handle_exception' as the global exception handler
         sys.excepthook = self.handle_exception
@@ -141,18 +149,19 @@ class ChargerLogic:
 
     def on_error_occur(self):
         exception = self.exception
+        exception_type = self.exception_type
         self.interface.state = "error"
-        print(f"Trying to resolve error: \n[ {exception}] \n")
+        logger.debug(f"Trying to resolve error: \n[ {exception}] \n")
        
         # TODO: Resolve error code here
 
-        if str(exception)[:18] == "HTTPConnectionPool":
+        if exception_type == requests.exceptions.ConnectionError:
             attempt = 0
             while True:
                 try:
                     attempt += 1
                     url = f"{SERVER_URL}/chargers/{self.charger_id}/deactivate/"
-                    print(f"(Attempt {attempt}) Trying to reconnect to: [{url}]...")
+                    logger.debug(f"(Attempt {attempt}) Trying to reconnect to: [{url}]...")
                     requests.post(url=url)
                     break
                 except Exception as e:
@@ -160,9 +169,16 @@ class ChargerLogic:
 
         time.sleep(3)
         self.stm.send("resolved")
-        
-        
-        
+    
+
+    def hello_server(self):
+        try:
+            response = requests.get(f"{SERVER_URL}/hello")
+            logger.debug(f"Received response from server.")
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            self.handle_exception(exc_type, e, exc_traceback)
+
 
     def on_error_resolved(self):
         self.interface.state = "available"
@@ -175,10 +191,12 @@ class ChargerLogic:
 
     def handle_exception(self, exc_type, exc_value, exc_traceback):
         self.exception = exc_value
+        self.exception_type = exc_type
         # Send an "error" event to the state machine
         self.stm.send("error")
         # Print the exception
-        print(f"Error occurred: \n {exc_value} \n")
+        logger.error(f"Error occurred: \n {exc_value} \n")
+        logger.error(f"Error type: {exc_type}")
         
 
     
@@ -406,9 +424,6 @@ class ChargerInterface:
         
     
     def init(self):
-        #message = "Sensehat is Starting up..."
-        #print(message)
-        #self.sense.show_message(message, text_colour=white, back_colour=COLORS["none"])
         return
 
     # Display a red "X".
@@ -456,22 +471,13 @@ class ChargerInterface:
     
         # When nozzle is connected
         if (self.connected): 
-
-            #self.sense.clear(COLORS["red"]) # Example usage
-
-            # TODO: Send the "connected" message here.
             self.stm.send("nozzle_disconnected")
-
             self.connected = False
-            #print("Charger Nozzle: Disconnected")
             
         # When nozzle is disconnected.
         else:
-            # TODO: Send the "disconnected" message here.
             self.stm.send("nozzle_connected")
-            
             self.connected = True
-            #print("Charger Nozzle: Connected")
 
     
     
