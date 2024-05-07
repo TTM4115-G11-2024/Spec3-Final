@@ -1,7 +1,11 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
-
 from database import Base
+
+"""
+This file contains the database model definitions, with their relationships.
+(Object–relational mapping)
+"""
 
 class Car(Base):
     __tablename__ = "cars"

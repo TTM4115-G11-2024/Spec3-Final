@@ -5,8 +5,9 @@ import models
 from database import SessionLocal, engine
 
 def run():
-    print("Hello from server")
-    models.Base.metadata.create_all(bind=engine)
+    ''' Starts the server '''
+
+    models.Base.metadata.create_all(bind=engine) # Creates database file, if not present
 
     app = FastAPI()
     app.include_router(endpoints.router)

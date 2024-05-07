@@ -8,8 +8,11 @@ from mqtt import MQTTClient
 import utils
 import models
 
-router = APIRouter()
+"""
+This file contains definitions for all the REST API endpoints of the server.
+"""
 
+router = APIRouter()
 mqtt_client = MQTTClient()
 mqtt_client.start()
 
@@ -50,6 +53,11 @@ def create_charger(charger: schemas.ChargerCreate, db: Session = Depends(get_db)
 
 @router.post("/chargers/{charger_id}/activate/", status_code=200)
 def activate_charger(activate_charger: schemas.ActivateCharger, charger_id: int, db: Session = Depends(get_db)):
+    '''
+    This method will try to activate a given charger for a car.
+    For non-reservable chargers, the charger must be available to start a charging session.
+    For reservable chargers, the car must also have an reservation for the current 30-minute time slot.
+    '''
     # Check if charger is valid
     db_charger = crud.get_charger(db, charger_id)
     if db_charger is None:
@@ -89,7 +97,10 @@ def activate_charger(activate_charger: schemas.ActivateCharger, charger_id: int,
         else:
             raise HTTPException(status_code=400, detail="The car has no reservation for the given charger at this time.")
 
+    # Charger is set to unavailable because the charging will start
     crud.update_charger(db, charger_id, schemas.ChargerUpdate(is_available=False, is_reservable=None))
+
+    # Notify the charger to allow car to start charging
     mqtt_client.send_start_charging_to_charger(charger_id, activate_charger.car_id, activate_charger.target_percentage, max_charging_time)
 
     return schemas.ActivateChargerReturn(max_charging_time=max_charging_time)
@@ -97,6 +108,7 @@ def activate_charger(activate_charger: schemas.ActivateCharger, charger_id: int,
 
 @router.post("/chargers/{charger_id}/deactivate/", status_code=200)
 def activate_charger(charger_id: int, db: Session = Depends(get_db)):
+    ''' This method will make a charger available again, after charging is finished.'''
     # Check if charger is valid
     db_charger = crud.get_charger(db, charger_id)
     if db_charger is None:
@@ -134,6 +146,14 @@ def get_reservation(reservation_id: int, db: Session = Depends(get_db)):
 
 @router.post("/reservations/", response_model=schemas.Reservation)
 def create_reservation(reservation: schemas.ReservationCreate, db: Session = Depends(get_db)):
+    '''
+    This method will make a reservation for a car to a charger.
+    To make a reservation, the following must be satisfied:
+        * The charger must be reservable
+        * The charging time-slot must be in the future
+        * The charging time-slot must start either HH:00 or HH:30, and end exactly 30 minutes after
+        * The charger cannot already be booked for the time-slot
+    '''
     db_car = crud.get_car(db, car_id=reservation.car_id)
     if db_car is None:
         raise HTTPException(status_code=400, detail="Car of car_id does not exist")
@@ -169,3 +189,8 @@ def create_reservation(reservation: schemas.ReservationCreate, db: Session = Dep
             raise HTTPException(status_code=400, detail="Charger is already booked for the specified timeslot.")
 
     return crud.create_reservation(db, reservation)
+
+
+@router.get("/hello", status_code=200)
+def hello():
+    return "hello"

@@ -1,8 +1,12 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 
 def is_valid_time(d: datetime):
+    ''' 
+    Checks if a datetime is valid. 
+    For this application, a valid datetime is defined as being either exactly HH:30 or HH:00.
+    '''
     if d.minute != 0 and d.minute != 30:
         return False
     if d.second != 0:

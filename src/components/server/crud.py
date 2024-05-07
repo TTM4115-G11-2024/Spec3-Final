@@ -2,6 +2,10 @@ from sqlalchemy.orm import Session
 
 import models, schemas
 
+"""
+This file contains methods used for interacting directly with the database. 
+"""
+
 
 # Car
 def get_car(db: Session, car_id: str):

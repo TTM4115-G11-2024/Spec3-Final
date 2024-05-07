@@ -1,5 +1,16 @@
 from charger import ChargerComponent
 import sys
+import logging
+
+
+def logger_init(level):
+    logger = logging.getLogger("charger_logger")
+    logger.setLevel(level)
+    ch = logging.StreamHandler()
+    ch.setLevel(level)
+    formatter = logging.Formatter("[%(asctime)s][%(levelname)s]   %(message)s")
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
 def get_charger_id_arg():
     args = sys.argv
@@ -11,8 +22,10 @@ def get_charger_id_arg():
     return charger_id
 
 def run():
-    charger_id = get_charger_id_arg()
+    ''' Starts charger component from args '''
+    logger_init(logging.DEBUG)
 
+    charger_id = get_charger_id_arg()
     ChargerComponent(charger_id)
 
 def run_from_python(charger_id):
